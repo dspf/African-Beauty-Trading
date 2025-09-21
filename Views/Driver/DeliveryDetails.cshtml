@@ -1,0 +1,175 @@
+﻿@model African_Beauty_Trading.Models.Order
+
+@using Microsoft.AspNet.Identity
+
+@{
+    ViewBag.Title = "Delivery Details";
+
+    // Normalized status text and quick helpers
+    var status = (Model.DeliveryStatus ?? "").ToLowerInvariant();
+    bool statusAllowsComplete = status.Contains("accept") || status.Contains("arriv") || status.Contains("assigned") || status.Contains("rental") || status.Contains("outfordelivery");
+    var currentDriverId = User.Identity.GetUserId();
+    bool isAssignedDriver = !string.IsNullOrEmpty(Model.DriverId) && currentDriverId == Model.DriverId;
+    bool showCompleteForm = isAssignedDriver && statusAllowsComplete;
+}
+
+
+<div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <div class="delivery-card" style="background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 30px; margin-top: 20px;">
+
+        <!-- Header -->
+        <div class="header" style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #eaeaea; padding-bottom: 15px;">
+            <h2 style="color: #2c3e50; margin: 0; font-weight: 600;">Delivery #@Model.Id</h2>
+            <p style="color: #7f8c8d; margin: 5px 0 0 0;">Delivery Details</p>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="info-section" style="margin-bottom: 25px;">
+            <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Customer Information</h4>
+            <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="color: #7f8c8d; font-size: 14px;">Email</label>
+                    <p style="color: #2c3e50; font-weight: 500;">@Model.Customer.Email</p>
+                </div>
+                <div>
+                    <label style="color: #7f8c8d; font-size: 14px;">Delivery Address</label>
+                    <p style="color: #2c3e50; font-weight: 500;">@Model.DeliveryAddress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Timeline -->
+        <div class="timeline-section" style="margin-bottom: 25px;">
+            <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Delivery Timeline</h4>
+            <ul style="list-style:none; padding:0; margin:0;">
+                <li style="margin-bottom:10px;">
+                    📦 <strong>Order Created:</strong>
+                    @(Model.OrderDate.HasValue ? Model.OrderDate.Value.ToString("f") : "Not available")
+                </li>
+                <li style="margin-bottom:10px;">
+                    🚚 <strong>Assigned to Driver:</strong>
+                    @(Model.DriverAssignedDate.HasValue ? Model.DriverAssignedDate.Value.ToString("f") : "Pending")
+                </li>
+                <li style="margin-bottom:10px;">
+                    🚗 <strong>Driver Arrived:</strong>
+                    @(Model.DriverArrivedDate.HasValue ? Model.DriverArrivedDate.Value.ToString("f") : "Not yet")
+                </li>
+                <li>
+                    ✅ <strong>Delivered:</strong>
+                    @(Model.DeliveryDate.HasValue ? Model.DeliveryDate.Value.ToString("f") : "Not yet")
+                </li>
+            </ul>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="status-section" style="margin-bottom: 25px;">
+            <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Delivery Status</h4>
+            <div style="display:inline-block; padding:8px 16px; border-radius:20px; font-weight:500;
+                 background:@(Model.DeliveryStatus=="Delivered" ? "#e8f5e8" : "#fff8e1");
+                 color:@(Model.DeliveryStatus=="Delivered" ? "#2e7d32" : "#f57c00");
+                 border:1px solid @(Model.DeliveryStatus=="Delivered" ? "#c8e6c9" : "#ffe0b2");">
+                @Model.DeliveryStatus
+            </div>
+        </div>
+
+        <!-- Driver Actions -->
+        <div class="actions-section" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eaeaea;">
+            <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Driver Actions</h4>
+
+            @if (Model.DeliveryStatus != "Delivered")
+            {
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    @using (Html.BeginForm("MarkAsArrived", "Driver", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("orderId", Model.Id)
+                        <button type="submit" class="btn btn-warning">🚗 I've Arrived</button>
+                    }
+
+                    @if (showCompleteForm)
+                    {
+                        <div class="card mt-4" style="flex:1; min-width:280px;">
+                            <div class="card-header bg-primary text-white">
+                                <h5>✅ Complete Delivery</h5>
+                            </div>
+                            <div class="card-body">
+                                @* Debug info - remove in production *@
+                                <div class="mb-2 small text-muted">
+                                    <strong>DEBUG:</strong>
+                                    DriverId = @Model.DriverId,
+                                    OTP exists = @(!string.IsNullOrEmpty(Model.DeliveryOtp) ? "yes" : "no"),
+                                    OtpGeneratedAt = @(Model.OtpGeneratedAt?.ToString("u") ?? "null")
+                                </div>
+
+                                @using (Html.BeginForm("CompleteDelivery", "Driver", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("orderId", Model.Id)
+
+                                    <div class="form-group">
+                                        <label for="otp">Enter Customer's OTP:</label>
+                                        <input type="text" id="otp" name="otp" class="form-control"
+                                               placeholder="Enter 6-digit OTP" required maxlength="6" />
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success mt-2">✅ Complete Delivery</button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <div style="padding: 15px; background: #e8f5e8; border-radius: 6px; border: 1px solid #c8e6c9;">
+                    <strong style="color: #2e7d32;">✅ Delivery Completed</strong>
+                    <p style="color: #388e3c; margin: 5px 0 0 0;">
+                        Completed on @Model.DeliveryDate?.ToString("f")
+                    </p>
+                </div>
+            }
+        </div>
+
+        <!-- Google Maps -->
+        <div>
+            <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Navigation</h4>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(Model.DeliveryAddress)"
+               target="_blank"
+               class="btn btn-primary">
+                📍 Get Directions
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .btn-arrived:hover {
+        background: #f57c00 !important;
+    }
+
+    .btn-complete:hover {
+        background: #388e3c !important;
+    }
+
+    .btn-directions:hover {
+        background: #3367d6 !important;
+        text-decoration: none;
+        color: white;
+    }
+
+    @@media (max-width: 600px) {
+        .info-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .container {
+            padding: 10px;
+        }
+
+        .delivery-card {
+            padding: 20px;
+        }
+    }
+</style>

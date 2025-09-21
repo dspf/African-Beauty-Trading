@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Driver Dashboard</title>
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    @Scripts.Render("~/bundles/modernizr")
+    <script>
+        function confirmLogout() {
+            if (confirm('Are you sure you want to go home and logout?')) {
+                document.getElementById('logoutForm').submit();
+                return false;
+            }
+            return false;
+        }
+    </script>
+</head>
+<body>
+    @using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { id = "logoutForm", style = "display:none;" }))
+    {
+        @Html.AntiForgeryToken()
+    }
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="bg-dark text-white p-3" style="min-width:220px; height:100vh;">
+            <h4 class="text-center">Driver Panel</h4>
+            <hr />
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    @Html.ActionLink("🏠 Home & Logout", "Index", "Home", null, new { @class = "nav-link text-white", onclick = "return confirmLogout();" })
+                </li>
+                <li class="nav-item">
+                    @Html.ActionLink("Dashboard", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                </li>
+                <li class="nav-item">
+                    @Html.ActionLink("My Deliveries", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                </li>
+                <li class="nav-item">
+                    @Html.ActionLink("Completed", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                </li>
+                <!-- Earnings Panel -->
+                <div class="earnings-panel p-3 mb-3 bg-white rounded shadow-sm">
+                    <h6 class="text-center mb-3">💰 Earnings Summary</h6>
+
+                    <div class="text-center mb-2">
+                        <div class="total-earnings">
+                            <small class="text-muted">Total Earnings</small>
+                            <h4 class="text-success mb-0">R @(ViewBag.TotalEarnings?.ToString("N2") ?? "0.00")</h4>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="text-center">
+                            <small class="text-muted">This Month</small>
+                            <div class="text-primary fw-bold">R @(ViewBag.ThisMonthEarnings?.ToString("N2") ?? "0.00")</div>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted">Completed</small>
+                            <div class="text-info fw-bold">@(ViewBag.CompletedDeliveriesCount ?? 0)</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-2">
+                        <small class="text-muted">Rate: R30 per delivery</small>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <div class="text-center">
+                        <a href="@Url.Action("Earnings", "Driver")" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-chart-line me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </ul>
+        </div>
+
+        <!-- Main -->
+        <div class="flex-grow-1 p-4">
+            @RenderBody()
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

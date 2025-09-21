@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - African Heritage</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #ff006e;
+            --accent: #8338ec;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #38b000;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1516005317335-577d585683af?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .floating-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            opacity: 0.1;
+            filter: blur(40px);
+            z-index: 0;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 200px;
+            height: 200px;
+        }
+
+        .shape-2 {
+            bottom: 10%;
+            right: 10%;
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            animation-delay: 2s;
+        }
+
+        @@keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-control {
+            border: none;
+            border-bottom: 2px solid #e9ecef;
+            border-radius: 0;
+            padding-left: 0;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-bottom-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 30px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(58, 134, 255, 0.3);
+        }
+
+        .contact-info-item {
+            padding: 20px;
+            border-radius: 10px;
+            background: var(--light);
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .contact-info-item:hover {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .contact-info-item:hover i {
+            color: white !important;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light);
+            color: var(--dark);
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .map-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-section {
+            background: linear-gradient(45deg, #2c3e50, #4ca1af);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://www.transparenttextures.com/patterns/connected.png');
+            opacity: 0.1;
+        }
+
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .icon-1 {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .icon-2 {
+            top: 60%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+
+        .icon-3 {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 2s;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @@media (max-width: 768px) {
+            .hero-section {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="container position-relative z-1">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <h1 class="display-3 fw-bold animate__animated animate__fadeInDown mb-4">Connect With Us</h1>
+                    <p class="lead animate__animated animate__fadeInUp">We're here to answer your questions and listen to your feedback. Let's start a conversation!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Content -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Contact Form -->
+                <div class="col-lg-7">
+                    <div class="contact-card p-4 p-md-5 animate__animated animate__fadeInLeft">
+                        <h2 class="fw-bold mb-4">Send Us a Message</h2>
+                        <p class="text-muted mb-4">Fill out the form below and we'll get back to you as soon as possible.</p>
+
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="Name" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="Name" placeholder="Enter your full name">
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="Email" class="form-label">Your Email</label>
+                                    <input type="email" class="form-control" id="Email" placeholder="Enter your email">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="Subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="Subject" placeholder="What is this regarding?">
+                            </div>
+                            <div class="mb-4">
+                                <label for="Message" class="form-label">Message</label>
+                                <textarea class="form-control" id="Message" rows="5" placeholder="Write your message..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Message <i class="fas fa-paper-plane ms-2"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="col-lg-5">
+                    <div class="animate__animated animate__fadeInRight">
+                        <h2 class="fw-bold mb-4">Get in Touch</h2>
+                        <p class="text-muted mb-4">We'd love to hear from you. Here's how you can reach us.</p>
+
+                        <div class="contact-info-item">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt text-danger me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Visit Us</h5>
+                                    <p class="mb-0">82 Diakonia Avenue, Durban, South Africa</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-info-item">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-phone-alt text-success me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Call Us</h5>
+                                    <p class="mb-0">+27 31 555 1234</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-info-item">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-envelope text-primary me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Email Us</h5>
+                                    <p class="mb-0">support@africanheritage.com</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h5 class="fw-bold mb-3">Follow Us</h5>
+                            <div class="social-links">
+                                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#"><i class="fab fa-twitter"></i></a>
+                                <a href="#"><i class="fab fa-instagram"></i></a>
+                                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#"><i class="fab fa-pinterest"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="text-center mb-5">
+                        <h2 class="fw-bold">Find Us Here</h2>
+                        <p class="text-muted">Visit our store in the heart of Durban</p>
+                    </div>
+                    <div class="map-container">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3455.320047829775!2d31.0218!3d-29.8587!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1ef7077acccccc%3A0x123456789abcdef!2sDurban!5e0!3m2!1sen!2sza!4v1700000000000!5m2!1sen!2sza"
+                                width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-icon">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h5 class="fw-bold">Free Shipping</h5>
+                    <p class="text-muted">On all orders over R500</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-icon">
+                        <i class="fas fa-undo"></i>
+                    </div>
+                    <h5 class="fw-bold">Easy Returns</h5>
+                    <p class="text-muted">30-day return policy</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5 class="fw-bold">Support 24/7</h5>
+                    <p class="text-muted">We're always here to help</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section text-white py-5">
+        <div class="cta-pattern"></div>
+        <i class="floating-icon icon-1 fas fa-heart"></i>
+        <i class="floating-icon icon-2 fas fa-star"></i>
+        <i class="floating-icon icon-3 fas fa-gem"></i>
+
+        <div class="container position-relative z-1 text-center py-5">
+            <h2 class="fw-bold display-5 mb-3">We're Here to Help!</h2>
+            <p class="lead mb-4">Reach out today and let's make your shopping experience unforgettable.</p>
+            <a href="#" class="btn btn-light btn-lg px-5 py-3 fw-bold">Browse Products</a>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const animatedElements = document.querySelectorAll('.contact-card, .contact-info-item');
+
+            animatedElements.forEach(element => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            });
+
+            setTimeout(() => {
+                animatedElements.forEach(element => {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>

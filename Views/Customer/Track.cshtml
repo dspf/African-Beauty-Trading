@@ -1,0 +1,133 @@
+﻿@model African_Beauty_Trading.Models.Order
+
+@{
+    ViewBag.Title = "Order Details";
+}
+
+<div class="container">
+    <h2>Order #@Model.Id</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Order Information</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Information -->
+                    <div class="customer-info mb-3 p-3 bg-light rounded">
+                        <h5>👤 Customer Details</h5>
+                        <p><strong>Name:</strong> @(Model.Customer?.FirstName ?? "N/A") @(Model.Customer?.LastName ?? "")</p>
+                        <p>
+                            <strong>Phone:</strong>
+                            @if (!string.IsNullOrEmpty(Model.Customer?.PhoneNumber))
+                            {
+                                <a href="tel:@Model.Customer.PhoneNumber" class="text-decoration-none">
+                                    @Model.Customer.PhoneNumber
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not provided</span>
+                            }
+                        </p>
+                    </div>
+
+                    <p><strong>Status:</strong> <span class="badge bg-info">@Model.DeliveryStatus</span></p>
+                    <p><strong>Order Date:</strong> @Model.OrderDate.Value.ToString("f")</p>
+                    <p><strong>Delivery Address:</strong> @Model.DeliveryAddress</p>
+
+                    @if (!string.IsNullOrEmpty(Model.DriverId))
+                    {
+                        <p><strong>Driver Assigned:</strong> Yes</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- OTP Section -->
+            @if (!string.IsNullOrEmpty(Model.DeliveryOtp) && Model.DeliveryStatus != "Delivered")
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5>🚗 Delivery OTP</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="otp-display" style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #28a745;">
+                            @Model.DeliveryOtp
+                        </div>
+                        <p class="text-muted mt-2">
+                            Provide this code to your driver when they arrive
+                        </p>
+                        <small class="text-muted">
+                            Generated: @Model.OtpGeneratedAt.Value.ToString("g")
+                        </small>
+                    </div>
+                </div>
+            }
+            else if (Model.DeliveryStatus == "Delivered")
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>✅ Delivery Completed</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p>Your order has been successfully delivered.</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card">
+        <div class="card-header">
+            <h4>Order Items</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Product.ImagePath))
+                                {
+                                    <img src="@item.Product.ImagePath" alt="@item.Product" style="max-width: 100px; max-height: 100px;" class="img-thumbnail" />
+                                }
+                            </td>
+                            <td>@item.Product.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>R @(item.Price * item.Quantity)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .otp-display {
+        background: #f8fff8;
+        border: 2px dashed #28a745;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+</style>

@@ -1,0 +1,260 @@
+@model African_Beauty_Trading.Models.Order
+
+@{
+    ViewBag.Title = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <!-- Display success/error/warning messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                </a>
+                <h2 class="text-primary">Checkout</h2>
+                <p class="text-muted">Complete your order details</p>
+            </div>
+
+            <!-- Checkout Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck me-2 text-primary"></i>Delivery Information
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("Checkout", "Cart", FormMethod.Post, new { @id = "checkoutForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <!-- Hidden field for OrderType -->
+                        @Html.HiddenFor(m => m.OrderType, new { Value = ViewBag.OrderType })
+
+                        <!-- Delivery Priority -->
+                        <div class="form-group mb-4">
+                            @Html.LabelFor(m => m.Priority, "Delivery Priority", new { @class = "form-label" })
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded p-3 h-100">
+                                        @Html.RadioButtonFor(m => m.Priority, "Normal", new { @class = "form-check-input", @id = "priorityNormal", @checked = "checked" })
+                                        <label class="form-check-label w-100" for="priorityNormal">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-flag text-success me-2"></i>
+                                                <div>
+                                                    <strong>Normal Delivery</strong>
+                                                    <br><small class="text-muted">Standard delivery time</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded p-3 h-100">
+                                        @Html.RadioButtonFor(m => m.Priority, "Urgent", new { @class = "form-check-input", @id = "priorityUrgent" })
+                                        <label class="form-check-label w-100" for="priorityUrgent">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-flag text-danger me-2"></i>
+                                                <div>
+                                                    <strong>Urgent Delivery</strong>
+                                                    <br><small class="text-muted">Priority delivery - faster processing</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Priority, "", new { @class = "text-danger" })
+                        </div>
+
+                        <!-- Delivery Address -->
+                        <div class="form-group mb-4">
+                            @Html.LabelFor(m => m.DeliveryAddress, "Delivery Address", new { @class = "form-label" })
+                            @Html.TextAreaFor(m => m.DeliveryAddress, new
+                            {
+                                @class = "form-control",
+                                rows = "3",
+                                placeholder = "Enter your complete delivery address",
+                                required = "required"
+                            })
+                            <small class="form-text text-muted">Include street, city, and postal code</small>
+                            @Html.ValidationMessageFor(m => m.DeliveryAddress, "", new { @class = "text-danger" })
+                        </div>
+
+                        <!-- Rental Section (if applicable) -->
+                        if (ViewBag.OrderType != null && ViewBag.OrderType.ToString() == "Rent")
+                        {
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="text-secondary mb-3">Rental Details</h6>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            @Html.LabelFor(m => m.RentStartDate, "Start Date", new { @class = "form-label" })
+                                            @Html.TextBoxFor(m => m.RentStartDate, new
+                                            {
+                                                @class = "form-control",
+                                                type = "date",
+                                                required = "required"
+                                            })
+                                            @Html.ValidationMessageFor(m => m.RentStartDate, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            @Html.LabelFor(m => m.RentEndDate, "Return Date", new { @class = "form-label" })
+                                            @Html.TextBoxFor(m => m.RentEndDate, new
+                                            {
+                                                @class = "form-control",
+                                                type = "date",
+                                                required = "required"
+                                            })
+                                            <small class="form-text text-muted">Driver will collect at this time</small>
+                                            @Html.ValidationMessageFor(m => m.RentEndDate, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Submit Button -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                <i class="fas fa-lock me-2"></i>Proceed to Payment
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('checkoutForm');
+        const addressInput = document.getElementById('DeliveryAddress');
+        const rentStart = document.getElementById('RentStartDate');
+        const rentEnd = document.getElementById('RentEndDate');
+
+        if (rentStart && rentEnd) {
+            const today = new Date().toISOString().split('T')[0];
+            rentStart.min = today;
+
+            rentStart.addEventListener('change', function () {
+                const startDate = new Date(rentStart.value);
+                if (!startDate) return;
+
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 3);
+
+                // Automatically set the return date to 3 days after start date
+                rentEnd.value = endDate.toISOString().split('T')[0];
+                rentEnd.min = startDate.toISOString().split('T')[0];
+                rentEnd.max = endDate.toISOString().split('T')[0];
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+            if (addressInput.value.trim().length < 10) {
+                e.preventDefault();
+                alert('Please enter a complete delivery address');
+                addressInput.focus();
+                return;
+            }
+
+            if (rentStart && rentEnd) {
+                if (!rentStart.value || !rentEnd.value) {
+                    e.preventDefault();
+                    alert('Please select both rental dates');
+                    return;
+                }
+
+                const startDate = new Date(rentStart.value);
+                const endDate = new Date(rentEnd.value);
+
+                const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+                if (diffDays !== 3) {
+                    e.preventDefault();
+                    alert('Rental period must be exactly 3 days.');
+                    return;
+                }
+            }
+        });
+    });
+</script>
+
+
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .card {
+        border-radius: 10px;
+    }
+
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn {
+        border-radius: 6px;
+    }
+
+    .form-control {
+        border-radius: 6px;
+    }
+
+    .container {
+        max-width: 1200px;
+    }
+
+    .form-check {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .form-check:hover {
+        background-color: #f8f9fa;
+        border-color: #007bff !important;
+    }
+
+    .form-check input[type="radio"]:checked + label {
+        color: #007bff;
+    }
+
+    .form-check input[type="radio"]:checked ~ .form-check {
+        border-color: #007bff !important;
+        background-color: #e7f3ff;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+    }
+</style>

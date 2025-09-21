@@ -1,0 +1,257 @@
+﻿@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Dashboard";
+    ViewBag.NavActive = "Dashboard";
+}
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-secondary small">Paid Orders</div>
+                <div class="display-6">@ViewBag.PaidOrders</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-secondary small">Pending Orders</div>
+                <div class="display-6">@ViewBag.PendingOrders</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-secondary small">Cancelled</div>
+                <div class="display-6">@ViewBag.CancelledOrders</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-secondary small">Total Revenue</div>
+                <div class="display-6">R @(Convert.ToDecimal(ViewBag.TotalRevenue) * 100)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Orders (Last 7 days)</h5>
+                    <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index","Products")">
+                        View all
+                    </a>
+                </div>
+                <canvas id="ordersChart" height="90"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-primary" href="@Url.Action("Create","Products")">
+                        <i class="bi bi-plus-circle me-1"></i> Create Order
+                    </a>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Index","Products", new { status = "Pending" })">
+                        <i class="bi bi-hourglass-split me-1"></i> Review Pending
+                    </a>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Index","Products", new { status = "Paid" })">
+                        <i class="bi bi-truck me-1"></i> Assign Deliveries
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr />
+<h3>📢 Latest Notifications</h3>
+
+@if (ViewBag.Notifications != null && ViewBag.Notifications.Count > 0)
+{
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Title</th>
+                <th>Message</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var note in ViewBag.Notifications)
+            {
+                <tr class="@(note.IsRead ? "" : "table-warning")">
+                    <td>@note.Title</td>
+                    <td>@note.Message</td>
+                    <td>@note.Type</td>
+                    <td>@note.CreatedDate.ToString("g")</td>
+                    <td>
+                        @if (note.RelatedEntity == "Order" && note.RelatedEntityId != null)
+                        {
+                            @Html.ActionLink("🔎 View Order", "OrderDetails", "Admin",
+                                new { id = note.RelatedEntityId }, new { @class = "btn btn-primary btn-sm" })
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Link</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No notifications yet.</p>
+}
+
+
+<div class="card shadow-sm border-0 mt-3">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Recent Orders</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer Details</th>
+                        <th>Contact</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var o in Model)
+                    {
+                        <tr>
+                            <td>#@o.Id</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <strong>@(o.Customer?.FirstName ?? "N/A") @(o.Customer?.LastName ?? "")</strong>
+                                    
+                                </div>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(o.Customer?.PhoneNumber))
+                                {
+                                    <a href="tel:@o.Customer.PhoneNumber" class="text-decoration-none">
+                                        <i class="fas fa-phone text-primary me-1"></i>
+                                        @o.Customer.PhoneNumber
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No phone</span>
+                                }
+                            </td>
+                            <td>@o.OrderDate.Value.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span class="badge @(o.OrderType == "Rental" ? "bg-info" : "bg-primary")">
+                                    @o.OrderType
+                                </span>
+                            </td>
+                            <td>R @(Convert.ToInt32(o.TotalPrice * 100))</td>
+                            <td>
+                                @if (o.PaymentStatus == "Paid")
+                                {
+                                    <span class="badge bg-success">Paid</span>
+                                }
+                                else if (o.PaymentStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                                else if (o.PaymentStatus == "Cancelled")
+                                {
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark">@o.PaymentStatus</span>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("OrderDetails","Admin", new { id = o.Id })">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.6em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .text-decoration-none:hover {
+        text-decoration: underline !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+@section scripts{
+    <script>
+    (function(){
+        var ctx = document.getElementById('ordersChart');
+        if(!ctx) return;
+
+        var labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartLabels));
+        var paid = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartPaid));
+        var pending = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartPending));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Paid', data: paid, tension: .35 },
+                    { label: 'Pending', data: pending, tension: .35 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    })();
+    </script>
+}

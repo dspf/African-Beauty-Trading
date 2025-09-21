@@ -1,0 +1,59 @@
+
+@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    ViewBag.Title = "Deliveries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<h2>My Deliveries</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Priority</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>
+                    @if (order.Priority == "Urgent")
+                    {
+                        <span class="badge bg-danger">
+                            <i class="fas fa-flag"></i> Urgent
+                        </span>
+                    }
+                    else if (order.Priority == "Normal")
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-flag"></i> Normal
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-flag"></i> Not Set
+                        </span>
+                    }
+                </td>
+                <td>@order.Customer.Email</td>
+                <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                <td>@order.PaymentStatus</td>
+                <td>R @order.TotalPrice</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+

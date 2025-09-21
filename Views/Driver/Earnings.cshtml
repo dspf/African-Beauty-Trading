@@ -1,0 +1,133 @@
+﻿
+@model List<African_Beauty_Trading.Models.Order>
+
+@{
+    ViewBag.Title = "Driver Earnings";
+    Layout = "~/Views/Shared/_LayoutDriver.cshtml";
+    decimal deliveryFee = ViewBag.DeliveryFee ?? 30.00m;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>💰 My Earnings</h2>
+
+            <!-- Earnings Summary -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5>Total Earnings</h5>
+                            <h3>R @ViewBag.TotalEarnings.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5>This Month</h5>
+                            <h3>R @ViewBag.ThisMonthEarnings.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5>Total Deliveries</h5>
+                            <h3>@Model.Count</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h5>Rate per Delivery</h5>
+                            <h3>R @deliveryFee.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Delivery Earnings History</h5>
+                    <p class="mb-0 text-muted">Fixed rate: R30 per successful delivery</p>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Delivery Date</th>
+                                    <th>Delivery Fee</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model)
+                                {
+                                    <tr>
+                                        <td>@order.Id</td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <strong>@(order.Customer?.FirstName ?? "N/A") @(order.Customer?.LastName ?? "")</strong>
+
+                                            </div>
+                                        </td>
+                                        <td>@order.DeliveryDate?.ToString("yyyy-MM-dd")</td>
+                                        <td class="text-success fw-bold">R @deliveryFee.ToString("N2")</td>
+                                        <td>
+                                            <span class="badge bg-success">Paid</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Total (@Model.Count deliveries):</td>
+                                    <td class="text-success">R @ViewBag.TotalEarnings.ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .earnings-panel {
+        border-left: 4px solid #28a745;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+        .earnings-panel .total-earnings {
+            padding: 10px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .earnings-panel h4 {
+            font-weight: 700;
+        }
+
+        .earnings-panel small {
+            font-size: 0.8rem;
+        }
+
+    .rate-badge {
+        background: rgba(255, 193, 7, 0.2);
+        color: #856404;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+</style>
+

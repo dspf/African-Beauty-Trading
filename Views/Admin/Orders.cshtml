@@ -1,0 +1,129 @@
+@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    ViewBag.Title = "Orders";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<h2>Orders</h2>
+<table class="table table-bordered table-striped table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>Order ID</th>
+            <th>Priority</th>
+            <th>Customer Details</th>
+            <th>Contact</th>
+            <th>Order Date</th>
+            <th>Order Type</th>
+            <th>Total Price</th>
+            <th>Payment Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>
+                    @if (order.Priority == "Urgent")
+                    {
+                        <span class="badge bg-danger">
+                            <i class="fas fa-flag"></i> Urgent
+                        </span>
+                    }
+                    else if (order.Priority == "Normal")
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-flag"></i> Normal
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-flag"></i> Not Set
+                        </span>
+                    }
+                </td>
+                <td>
+                    <div class="d-flex flex-column">
+                        <strong>@(order.Customer?.FirstName ?? "N/A") @(order.Customer?.LastName ?? "")</strong>
+                        
+                    </div>
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(order.Customer?.PhoneNumber))
+                    {
+                        <a href="tel:@order.Customer.PhoneNumber" class="text-decoration-none">
+                            <i class="fas fa-phone text-primary me-1"></i>
+                            @order.Customer.PhoneNumber
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No phone</span>
+                    }
+                </td>
+                <td>@order.OrderDate.Value.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <span class="badge @(order.OrderType == "Rental" ? "bg-info" : "bg-primary")">
+                        @order.OrderType
+                    </span>
+                </td>
+                <td>R @(order.TotalPrice * 100)</td>
+                <td>
+                    @if (order.PaymentStatus == "Paid")
+                    {
+                        <span class="badge bg-success">Paid</span>
+                    }
+                    else if (order.PaymentStatus == "Pending")
+                    {
+                        <span class="badge bg-warning">Pending</span>
+                    }
+                    else if (order.PaymentStatus == "Cancelled")
+                    {
+                        <span class="badge bg-secondary">Cancelled</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-dark">@order.PaymentStatus</span>
+                    }
+                </td>
+                <td>
+                    @Html.ActionLink("View", "OrderDetails", "Admin", new { id = order.Id }, new { @class = "btn btn-info btn-sm" })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .table th {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.6em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .text-decoration-none:hover {
+        text-decoration: underline !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

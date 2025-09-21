@@ -1,0 +1,424 @@
+@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Orders</h2>
+    <a href="#" onclick="return confirmLogout();" class="btn btn-outline-primary">
+        <i class="fas fa-home me-1"></i> Home & Logout
+    </a>
+</div>
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs" id="orderTabs" role="tablist" style="background-color:#000;">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="all-orders-tab" data-bs-toggle="tab" data-bs-target="#all-orders" type="button" role="tab" style="color:#fff;">
+            <i class="fas fa-list"></i> All Orders
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="purchase-orders-tab" data-bs-toggle="tab" data-bs-target="#purchase-orders" type="button" role="tab" style="color:#fff;">
+            <i class="fas fa-shopping-cart"></i> Purchases
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rental-orders-tab" data-bs-toggle="tab" data-bs-target="#rental-orders" type="button" role="tab" style="color:#fff;">
+            <i class="fas fa-calendar-alt"></i> Rentals
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="orderTabContent">
+    <!-- All Orders Tab -->
+    <div class="tab-pane fade show active" id="all-orders" role="tabpanel">
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Priority</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Driver Details</th>
+                        <th>Track</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td>@order.Id</td>
+                            <td>
+                                @if (order.Priority == "Urgent")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-flag"></i> Urgent
+                                    </span>
+                                }
+                                else if (order.Priority == "Normal")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-flag"></i> Normal
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-flag"></i> Not Set
+                                    </span>
+                                }
+                            </td>
+                            <td>@order.OrderDate.Value.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @{
+                                    var hasRentals = order.OrderItems.Any(oi => oi.IsRental);
+                                    var hasPurchases = order.OrderItems.Any(oi => !oi.IsRental);
+                                }
+                                @if (hasRentals && hasPurchases)
+                                {
+                                    <span class="badge bg-info">Mixed</span>
+                                }
+                                else if (hasRentals)
+                                {
+                                    <span class="badge bg-warning">Rental</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Purchase</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadge(order.DeliveryStatus)">
+                                    @order.DeliveryStatus
+                                </span>
+                            </td>
+                            <td>R @(order.TotalPrice * 100)</td>
+                            <td>
+                                @if (order.Driver != null)
+                                {
+                                    <div class="driver-details">
+                                        <strong>@order.Driver.FirstName @order.Driver.LastName</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone"></i> @order.Driver.PhoneNumber
+                                        </small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not Assigned</span>
+                                }
+                            </td>
+                            <td>
+                                @Html.ActionLink("Track", "Track", "Customer", new { id = order.Id }, new { @class = "btn btn-primary btn-sm" })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Purchase Orders Tab -->
+    <div class="tab-pane fade" id="purchase-orders" role="tabpanel">
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Priority</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Driver Details</th>
+                        <th>Track</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Where(o => o.OrderItems.Any(oi => !oi.IsRental)))
+                    {
+                        <tr>
+                            <td>@order.Id</td>
+                            <td>
+                                @if (order.Priority == "Urgent")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-flag"></i> Urgent
+                                    </span>
+                                }
+                                else if (order.Priority == "Normal")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-flag"></i> Normal
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-flag"></i> Not Set
+                                    </span>
+                                }
+                            </td>
+                            <td>@order.OrderDate.Value.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @foreach (var item in order.OrderItems.Where(oi => !oi.IsRental))
+                                {
+                                    <div class="purchase-item">
+                                        <strong>@item.Product.Name</strong> (Qty: @item.Quantity)
+                                        <br /><small class="text-muted">R @item.Price.ToString("N2")</small>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadge(order.DeliveryStatus)">
+                                    @order.DeliveryStatus
+                                </span>
+                            </td>
+                            <td>R @order.OrderItems.Where(oi => !oi.IsRental).Sum(oi => oi.Price).ToString("N2")</td>
+                            <td>
+                                @if (order.Driver != null)
+                                {
+                                    <div class="driver-details">
+                                        <strong>@order.Driver.FirstName @order.Driver.LastName</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone"></i> @order.Driver.PhoneNumber
+                                        </small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not Assigned</span>
+                                }
+                            </td>
+                            <td>
+                                @Html.ActionLink("Track", "Track", "Customer", new { id = order.Id }, new { @class = "btn btn-primary btn-sm" })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Rental Orders Tab -->
+    <div class="tab-pane fade" id="rental-orders" role="tabpanel">
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Priority</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Rental Period</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Driver Details</th>
+                        <th>Track</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Where(o => o.OrderItems.Any(oi => oi.IsRental)))
+                    {
+                        <tr>
+                            <td>@order.Id</td>
+                            <td>
+                                @if (order.Priority == "Urgent")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-flag"></i> Urgent
+                                    </span>
+                                }
+                                else if (order.Priority == "Normal")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-flag"></i> Normal
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-flag"></i> Not Set
+                                    </span>
+                                }
+                            </td>
+                            <td>@order.OrderDate.Value.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @foreach (var item in order.OrderItems.Where(oi => oi.IsRental))
+                                {
+                                    <div class="rental-item">
+                                        <strong>@item.Product.Name</strong> (Qty: @item.Quantity)
+                                        <br /><small class="text-muted">R @item.RentalFeePerDay/day + R @item.Deposit deposit</small>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @{
+                                    var firstRentalItem = order.OrderItems.FirstOrDefault(oi => oi.IsRental);
+                                }
+                                @if (firstRentalItem != null && firstRentalItem.RentalStartDate.HasValue && firstRentalItem.RentalEndDate.HasValue)
+                                {
+                                    <div class="rental-period">
+                                        <strong>@firstRentalItem.RentalStartDate.Value.ToString("dd MMM")</strong>
+                                        <br />to
+                                        <br /><strong>@firstRentalItem.RentalEndDate.Value.ToString("dd MMM")</strong>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not specified</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadge(order.DeliveryStatus)">
+                                    @order.DeliveryStatus
+                                </span>
+                            </td>
+                            <td>R @order.OrderItems.Where(oi => oi.IsRental).Sum(oi => oi.Price).ToString("N2")</td>
+                            <td>
+                                @if (order.Driver != null)
+                                {
+                                    <div class="driver-details">
+                                        <strong>@order.Driver.FirstName @order.Driver.LastName</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone"></i> @order.Driver.PhoneNumber
+                                        </small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not Assigned</span>
+                                }
+                            </td>
+                            <td>
+                                @Html.ActionLink("Track", "Track", "Customer", new { id = order.Id }, new { @class = "btn btn-primary btn-sm" })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadge(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "delivered":
+                return "bg-success";
+            case "in transit":
+            case "shipped":
+                return "bg-primary";
+            case "processing":
+            case "assigned":
+                return "bg-info";
+            case "pending":
+                return "bg-warning";
+            case "cancelled":
+                return "bg-danger";
+            default:
+                return "bg-secondary";
+        }
+    }
+}
+
+<style>
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.6em;
+    }
+
+    .driver-details {
+        font-size: 0.9em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: 1px solid transparent;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color: #e9ecef #e9ecef #dee2e6;
+        isolation: isolate;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #495057;
+        background-color: #fff;
+        border-color: #dee2e6 #dee2e6 #fff;
+    }
+
+    .purchase-item, .rental-item {
+        margin-bottom: 8px;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border-left: 4px solid #28a745;
+    }
+
+    .rental-item {
+        border-left-color: #ffc107;
+    }
+
+    .rental-period {
+        text-align: center;
+        font-size: 0.9em;
+    }
+
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 0.375rem 0.375rem;
+        background-color: #fff;
+    }
+
+    .bg-info { background-color: #0dcaf0 !important; }
+    .bg-warning { background-color: #ffc107 !important; }
+    .bg-success { background-color: #198754 !important; }
+    .table-light th {
+        background-color: #000 !important;
+        color: #fff !important;
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Bootstrap 5 JS for tabs -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { id = "logoutForm", style = "display:none;" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<script>
+    function confirmLogout() {
+        if (confirm('Are you sure you want to go home and logout?')) {
+            document.getElementById('logoutForm').submit();
+            return false;
+        }
+        return false;
+    }
+</script>

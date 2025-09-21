@@ -1,0 +1,289 @@
+@model African_Beauty_Trading.Models.Product
+
+@{
+    ViewBag.Title = "Product Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="product-detail-container">
+    <div class="breadcrumb-nav">
+        <a href="@Url.Action("Index", "Home")">Home</a> /
+        <a href="@Url.Action("Index", "Products")">Products</a> /
+        <span>@Model.Name</span>
+    </div>
+
+    <div class="product-detail-card">
+        <div class="product-image-section">
+            <div class="main-image">
+                <img src="@Url.Content(Model.ImagePath ?? "~/Content/Images/placeholder.jpg")" alt="@Model.Name" class="img-fluid" />
+            </div>
+        </div>
+
+        <div class="product-info-section">
+            <h1 class="product-title">@Model.Name</h1>
+
+            <div class="product-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Category:</span>
+                    <span class="meta-value">@Model.Category.Name</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Department:</span>
+                    <span class="meta-value">@Model.Department.Name</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Size:</span>
+                    <span class="meta-value">@Model.Size</span>
+                </div>
+            </div>
+
+            <div class="pricing-section">
+                <div class="price-card">
+                    <div class="price-type">Purchase Price</div>
+                    <div class="price-amount">R @Model.Price.ToString("N2")</div>
+                </div>
+
+                <div class="price-card rental">
+                    <div class="price-type">Rental Fee</div>
+                    <div class="price-amount">R @Model.RentalFee.ToString("N2")</div>
+                </div>
+            </div>
+
+            <div class="stock-info">
+                <span class="stock-badge @(Model.Stock > 0 ? "in-stock" : "out-of-stock")">
+                    @(Model.Stock > 0 ? $"{Model.Stock} in stock" : "Out of stock")
+                </span>
+            </div>
+
+            <div class="action-buttons">
+                @using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
+                {
+                    @Html.Hidden("productId", Model.Id)
+                    @Html.Hidden("isRental", false)
+                    <button type="submit" class="btn btn-buy">Add to Cart - Buy</button>
+                }
+
+                @using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
+                {
+                    @Html.Hidden("productId", Model.Id)
+                    @Html.Hidden("isRental", true)
+                    <button type="submit" class="btn btn-rent">Add to Cart - Rent</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-detail-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 15px;
+    }
+
+    .breadcrumb-nav {
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+        .breadcrumb-nav a {
+            color: #8a5d3b;
+            text-decoration: none;
+        }
+
+            .breadcrumb-nav a:hover {
+                text-decoration: underline;
+            }
+
+    .product-detail-card {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    @@media (min-width: 992px) {
+        .product-detail-card {
+            flex-direction: row;
+        }
+    }
+
+    .product-image-section {
+        flex: 1;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+    }
+
+    .main-image {
+        max-width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+        .main-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+    .product-info-section {
+        flex: 1;
+        padding: 30px;
+    }
+
+    @@media (min-width: 992px) {
+        .product-info-section {
+            border-left: 1px solid #eee;
+        }
+    }
+
+    .product-title {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+    }
+
+    .product-meta {
+        margin-bottom: 25px;
+    }
+
+    .meta-item {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: #2c3e50;
+        min-width: 100px;
+    }
+
+    .meta-value {
+        color: #5a6c7d;
+    }
+
+    .pricing-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    @@media (min-width: 576px) {
+        .pricing-section {
+            flex-direction: row;
+        }
+    }
+
+    .price-card {
+        flex: 1;
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        text-align: center;
+    }
+
+        .price-card.rental {
+            background: #fff8e6;
+        }
+
+    .price-type {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .price-amount {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .stock-info {
+        margin-bottom: 25px;
+    }
+
+    .stock-badge {
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+        .stock-badge.in-stock {
+            background: #e7f6e9;
+            color: #2a7d2e;
+        }
+
+        .stock-badge.out-of-stock {
+            background: #ffe5e5;
+            color: #d32f2f;
+        }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    @@media (min-width: 576px) {
+        .action-buttons {
+            flex-direction: row;
+        }
+    }
+
+    .action-buttons form {
+        flex: 1;
+        margin: 0;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+
+    .btn-buy {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-buy:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
+
+    .btn-rent {
+        background: #ffc107;
+        color: #212529;
+    }
+
+        .btn-rent:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            color: #212529;
+        }
+</style>

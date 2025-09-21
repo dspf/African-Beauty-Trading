@@ -1,0 +1,103 @@
+﻿@model African_Beauty_Trading.Models.Order
+
+@{
+    ViewBag.Title = "Order Details";
+}
+
+<div class="container mt-4" style="max-width: 1000px;">
+
+    <!-- Order Header -->
+    <div class="card shadow-lg border-0 rounded-4 mb-4">
+        <div class="card-body">
+            <h2 class="fw-bold text-primary mb-3">📦 Order #@Model.Id</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> @(Model.Customer?.FirstName ?? "N/A") @(Model.Customer?.LastName ?? "")</p>
+                    <p><strong>Phone:</strong> @(Model.Customer?.PhoneNumber ?? "Not provided")</p>
+                    <p><strong>Date:</strong> @Model.OrderDate.Value.ToString("yyyy-MM-dd")</p>
+                </div>
+                <div class="col-md-6">
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning text-dark")"
+                              style="font-size:1rem;">
+                            @Model.PaymentStatus
+                        </span>
+                    </p>
+                    
+                    <p><strong>Order Type:</strong> @Model.OrderType</p>
+                    <p><strong>Total:</strong> <span class="fw-bold text-success">R @(Model.TotalPrice * 100)</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-light fw-bold">🛒 Order Items</div>
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>IMG</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price (Each)</th>
+                        <th>Total</th>
+                        <th style="width:180px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Product.ImagePath))
+                                {
+                                    <img src="@item.Product.ImagePath" alt="@item.Product.Name" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="flex-shrink-0 bg-light rounded p-2 me-3">
+                                        <i class="fas fa-box-open text-muted" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td>@item.Product.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>R @item.Price</td>
+                            <td>R @((item.Quantity * item.Price).ToString("N2"))</td>
+                            <td>
+                                @if (Model.PaymentStatus == "Paid")
+                                {
+                                    if (Model.Driver == null)
+                                    {
+                                        @Html.ActionLink("🚚 Assign Driver",
+                                            "AssignDriver",
+                                            "Admin",
+                                            new { id = Model.Id },
+                                            new { @class = "btn btn-sm btn-info rounded-3" })
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary p-2">Driver: @Model.Driver.FirstName</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Pending Payment</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-end">
+        @Html.ActionLink("⬅ Back to Orders", "Orders", "Admin", null, new { @class = "btn btn-secondary rounded-3" })
+    </div>
+</div>

@@ -1,0 +1,14 @@
+﻿
+@{
+    ViewBag.Title = "PaymentSuccess";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Payment Successful ✅</h2>
+<p>@ViewBag.Message</p>
+
+<p>
+    Thank you for your order. You can view your
+    @Html.ActionLink("Orders", "Dashboard", "Customer").
+</p>
+

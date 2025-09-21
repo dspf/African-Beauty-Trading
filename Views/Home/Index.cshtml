@@ -1,0 +1,676 @@
+﻿@{
+    ViewBag.Title = "African Heritage Trading - Traditional Attire";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main>
+    
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-pattern"></div>
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title animate__animated animate__fadeInDown">African Heritage Trading</h1>
+                <p class="hero-subtitle animate__animated animate__fadeInLeft">Preserving Culture Through Traditional Attire</p>
+                <p class="hero-description animate__animated animate__fadeInRight">Rent or purchase authentic African traditional clothing for your special occasions</p>
+                <div class="hero-buttons">
+                    <a href="@Url.Action("Browse", "Customer")" class="btn btn-primary animate__animated animate__fadeInUp">Browse Collection</a>
+                    <a href="@Url.Action("Contact", "Home")" class="btn btn-secondary animate__animated animate__fadeInUp">Join Our Community</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Why Choose African Heritage Trading?</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <h3>Authentic Attire</h3>
+                    <p>Genuine traditional clothing from various African cultures</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Flexible Rental</h3>
+                    <p>Rent outfits for special occasions or purchase to keep forever</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3>Doorstep Delivery</h3>
+                    <p>Free delivery and pickup for rental items in selected areas</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Quality Guarantee</h3>
+                    <p>All outfits are professionally cleaned and quality checked</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Explore Our Collections</h2>
+            <div class="categories-grid">
+                <div class="category-card" data-aos="fade-up" data-aos-delay="100">
+                    <img src="https://images.unsplash.com/photo-1598894592036-b994cac6369b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Men's Traditional Wear" />
+                    <div class="category-overlay">
+                        <h3>Men's Collection</h3>
+                        <a href="@Url.Action("Browse", "Customer", new { departmentId = 1 })" class="btn btn-outline-light">Explore</a>
+                    </div>
+                </div>
+                <div class="category-card" data-aos="fade-up" data-aos-delay="200">
+                    <img src="https://images.unsplash.com/photo-1532453288376-5f48a0c8ece5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Women's Traditional Wear" />
+                    <div class="category-overlay">
+                        <h3>Women's Collection</h3>
+                        <a href="@Url.Action("Browse", "Customer", new { departmentId = 2 })" class="btn btn-outline-light">Explore</a>
+                    </div>
+                </div>
+                <div class="category-card" data-aos="fade-up" data-aos-delay="300">
+                    <img src="https://images.unsplash.com/photo-162462030196-1a5c2f2b5b42?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Kids Traditional Wear" />
+                    <div class="category-overlay">
+                        <h3>Kids' Collection</h3>
+                        <a href="@Url.Action("Browse", "Customer", new { departmentId = 3 })" class="btn btn-outline-light">Explore</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Featured Products</h2>
+            <p class="text-center mb-5" data-aos="fade-up" data-aos-delay="100">Discover our most popular traditional attire</p>
+
+            <div class="row">
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1581252584894-2f5be56f3878?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Zulu Traditional Attire">
+                            <div class="product-badge">Popular</div>
+                            <button class="product-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Traditional Zulu Attire</h3>
+                            <div class="product-price">
+                                <span class="current-price">R249/day</span>
+                                <span class="original-price">R299/day</span>
+                            </div>
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span>(24)</span>
+                            </div>
+                            <p>Authentic Zulu traditional outfit for ceremonies and special occasions.</p>
+                            <div class="product-actions">
+                                <button class="add-to-cart" data-id="1" data-name="Traditional Zulu Attire" data-price="249" data-image="https://images.unsplash.com/photo-1581252584894-2f5be56f3878?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" data-is-rental="true">
+                                    <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+                                <a href="@Url.Action("Details", "Customer", new { id = 1 })" class="view-details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1532453288376-5f48a0c8ece5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Xhosa Traditional Attire">
+                            <button class="product-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Elegant Xhosa Outfit</h3>
+                            <div class="product-price">
+                                <span class="current-price">R299/day</span>
+                                <span class="original-price">R349/day</span>
+                            </div>
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <span>(18)</span>
+                            </div>
+                            <p>Beautiful Xhosa traditional dress with intricate beadwork and patterns.</p>
+                            <div class="product-actions">
+                                <button class="add-to-cart" data-id="2" data-name="Elegant Xhosa Outfit" data-price="299" data-image="https://images.unsplash.com/photo-1532453288376-5f48a0c8ece5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" data-is-rental="true">
+                                    <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+                                <a href="@Url.Action("Details", "Customer", new { id = 2 })" class="view-details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-162462030196-1a5c2f2b5b42?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Sotho Traditional Attire">
+                            <div class="product-badge">New</div>
+                            <button class="product-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Sotho Traditional Blanket</h3>
+                            <div class="product-price">
+                                <span class="current-price">R199/day</span>
+                                <span class="original-price">R249/day</span>
+                            </div>
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <span>(12)</span>
+                            </div>
+                            <p>Warm and colorful Sotho blanket for traditional ceremonies and events.</p>
+                            <div class="product-actions">
+                                <button class="add-to-cart" data-id="3" data-name="Sotho Traditional Blanket" data-price="199" data-image="https://images.unsplash.com/photo-162462030196-1a5c2f2b5b42?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" data-is-rental="true">
+                                    <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+                                <a href="@Url.Action("Details", "Customer", new { id = 3 })" class="view-details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5" data-aos="fade-up">
+                <a href="@Url.Action("Browse", "Customer")" class="btn btn-outline-primary btn-lg">View All Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="process-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">How It Works</h2>
+            <div class="process-steps">
+                <div class="process-step" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-number">1</div>
+                    <h3>Browse & Select</h3>
+                    <p>Choose from our extensive collection of traditional attire</p>
+                </div>
+                <div class="process-step" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-number">2</div>
+                    <h3>Rent or Buy</h3>
+                    <p>Decide whether to rent for an event or purchase permanently</p>
+                </div>
+                <div class="process-step" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-number">3</div>
+                    <h3>Get Delivery</h3>
+                    <p>We deliver to your doorstep anywhere in South Africa</p>
+                </div>
+                <div class="process-step" data-aos="fade-up" data-aos-delay="400">
+                    <div class="step-number">4</div>
+                    <h3>Enjoy & Return</h3>
+                    <p>Wear with pride and we'll handle pickup after your event</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">What Our Customers Say</h2>
+            <div class="testimonials-slider">
+                <div class="testimonial" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-content">
+                        <p>"The Zulu traditional attire I rented for my wedding was absolutely stunning! The quality exceeded my expectations."</p>
+                        <div class="testimonial-author">
+                            <strong>Nomusa Zulu</strong>
+                            <span>Johannesburg</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-content">
+                        <p>"As a diaspora African, this service helped me connect with my roots. The Xhosa outfit was perfect for my graduation."</p>
+                        <div class="testimonial-author">
+                            <strong>Lerato Mbeki</strong>
+                            <span>Cape Town</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-pattern"></div>
+        <i class="floating-icon icon-1 fas fa-heart"></i>
+        <i class="floating-icon icon-2 fas fa-star"></i>
+        <i class="floating-icon icon-3 fas fa-gem"></i>
+
+        <div class="container">
+            <div class="cta-content">
+                <h2 data-aos="fade-up">Ready to Embrace Your Heritage?</h2>
+                <p data-aos="fade-up" data-aos-delay="100">Join thousands of satisfied customers who have celebrated their culture with our traditional attire</p>
+                <div class="cta-buttons">
+                    <a href="@Url.Action("Browse", "Customer")" class="btn btn-primary" data-aos="fade-up" data-aos-delay="200">Start Shopping</a>
+                    <a href="@Url.Action("Contact", "Home")" class="btn btn-secondary" data-aos="fade-up" data-aos-delay="300">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+@section Scripts {
+    <script>
+        // In your index.cshtml or a separate JS file
+$(document).ready(function() {
+    $('.add-to-cart').click(function(e) {
+        e.preventDefault();
+
+        // Check if user is authenticated
+        @if (User.Identity.IsAuthenticated)
+        {
+            <text>
+            // User is logged in - add to cart
+            var productId = $(this).data('id');
+            var productName = $(this).data('name');
+            var price = $(this).data('price');
+            var image = $(this).data('image');
+            var isRental = $(this).data('is-rental');
+
+            // AJAX call to add to cart
+            $.post('@Url.Action("AddToCart", "Customer")', {
+                productId: productId,
+                productName: productName,
+                price: price,
+                image: image,
+                isRental: isRental
+            }, function(response) {
+                if (response.success) {
+                    toastr.success('Item added to cart!');
+                    // Update cart count
+                    $('#cart-count').text(response.cartCount);
+                } else {
+                    toastr.error('Error adding item to cart');
+                }
+            });
+            </text>
+        }
+        else
+        {
+            <text>
+            // User is not logged in - redirect to login
+            toastr.info('Please login to add items to your cart');
+            setTimeout(function() {
+                window.location.href = '@Url.Action("Login", "Account")?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }, 1500);
+            </text>
+        }
+    });
+});
+        // Simple testimonial slider
+        document.addEventListener('DOMContentLoaded', function () {
+            const testimonials = document.querySelectorAll('.testimonial');
+            let currentTestimonial = 0;
+
+            function showTestimonial(index) {
+                testimonials.forEach((testimonial, i) => {
+                    testimonial.style.display = i === index ? 'block' : 'none';
+                });
+            }
+
+            // Auto-rotate testimonials
+            setInterval(() => {
+                currentTestimonial = (currentTestimonial + 1) % testimonials.length;
+                showTestimonial(currentTestimonial);
+            }, 5000);
+
+            // Show first testimonial initially
+            showTestimonial(0);
+        });
+    </script>
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #8b0000;
+            --secondary-color: #ffd700;
+            --accent-color: #006400;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --bg-light: #f8f9fa;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M25 25h50v50H25z' stroke='%23ffd700' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+            .btn-primary:hover {
+                background: #ffed4e;
+                transform: translateY(-2px);
+            }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--secondary-color);
+        }
+
+            .btn-secondary:hover {
+                background: var(--secondary-color);
+                color: var(--primary-color);
+            }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--text-light);
+        }
+
+            .btn-outline:hover {
+                background: var(--text-light);
+                color: var(--primary-color);
+            }
+
+        .btn-large {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Sections */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-dark);
+            position: relative;
+        }
+
+            .section-title::after {
+                content: '';
+                display: block;
+                width: 80px;
+                height: 4px;
+                background: var(--secondary-color);
+                margin: 1rem auto;
+            }
+
+        /* Features Section */
+        .features-section {
+            padding: 5rem 0;
+            background: var(--bg-light);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--secondary-color);
+            font-size: 2rem;
+        }
+
+        /* Categories Section */
+        .categories-section {
+            padding: 5rem 0;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .category-card {
+            position: relative;
+            height: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+            .category-card img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+
+            .category-card:hover img {
+                transform: scale(1.1);
+            }
+
+        .category-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Process Section */
+        .process-section {
+            padding: 5rem 0;
+            background: var(--bg-light);
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 5rem 0;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 1rem;
+            text-align: center;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .cta-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.3rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .hero-buttons, .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}

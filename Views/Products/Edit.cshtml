@@ -1,0 +1,153 @@
+@model African_Beauty_Trading.Models.Product
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Edit</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>Product</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.Id)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.CategoryId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.CategoryId, 
+                       (SelectList)ViewBag.CategoryId, "Select Category", 
+                       new { @class = "form-control rounded-3" })
+                @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.DepartmentId, "Department", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.DepartmentId,
+                    (SelectList)ViewBag.DepartmentId, "Select Department",
+                    new { @class = "form-control rounded-3" })
+                @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Size, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.Size, (SelectList)ViewBag.Sizes,
+                    "Select Size", new { @class = "form-control rounded-3" })
+                @Html.ValidationMessageFor(model => model.Size, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.AgeGroup, "Age Group", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.AgeGroup, (SelectList)ViewBag.AgeGroups,
+                    "Select Age Group", new { @class = "form-control rounded-3" })
+                @Html.ValidationMessageFor(model => model.AgeGroup, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ProductType, "Product Type", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.ProductType,
+                    new SelectList(new[] {
+                        new { Value = "Buy", Text = "For Purchase Only" },
+                        new { Value = "Rent", Text = "For Rental Only" },
+                        new { Value = "Both", Text = "For Both Purchase and Rental" }
+                    }, "Value", "Text", Model.ProductType),
+                    "Select Product Type",
+                    new { @class = "form-control", id = "productType" })
+                @Html.ValidationMessageFor(model => model.ProductType, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group" id="priceSection">
+            @Html.LabelFor(model => model.Price, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Price, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group" id="rentalSection">
+            @Html.LabelFor(model => model.RentalFee, "Rental Fee per Day", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.RentalFee, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.RentalFee, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Stock, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Stock, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Stock, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ImagePath, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.ImagePath, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.ImagePath, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function() {
+            // Handle product type change
+            $('#productType').change(function() {
+                var selectedType = $(this).val();
+                
+                // Hide all sections first
+                $('#priceSection').hide();
+                $('#rentalSection').hide();
+                
+                // Show relevant sections based on selection
+                if (selectedType === 'Buy') {
+                    $('#priceSection').show();
+                } else if (selectedType === 'Rent') {
+                    $('#rentalSection').show();
+                } else if (selectedType === 'Both') {
+                    $('#priceSection').show();
+                    $('#rentalSection').show();
+                }
+            });
+            
+            // Trigger change event on page load to show appropriate sections
+            $('#productType').trigger('change');
+        });
+    </script>
+}

@@ -1,0 +1,191 @@
+@model African_Beauty_Trading.Models.Product
+
+@{
+    ViewBag.Title = "Create Product";
+}
+
+<div class="container mt-5" style="max-width: 1000px;">
+    <div class="card shadow-lg border-0 rounded-4"
+         style="background: #fff; padding:30px;">
+
+        <h2 class="fw-bold mb-4 text-center"
+            style="font-size:2rem; color:#333; letter-spacing:1px; text-transform:uppercase;">
+            Create New Product
+        </h2>
+
+        @using (Html.BeginForm("Create", "Products", FormMethod.Post,
+                               new { enctype = "multipart/form-data", @class = "needs-validation" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+            <div class="row g-4">
+                <!-- Left Column -->
+                <div class="col-md-6">
+
+                    <div class="form-group mb-3">
+                        @Html.LabelFor(model => model.Name, "Product Name",
+                            htmlAttributes: new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.Name,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.Name, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.LabelFor(model => model.Description, "Description",
+                            htmlAttributes: new { @class = "fw-bold mb-2" })
+                        @Html.TextAreaFor(model => model.Description,
+                            new { @class = "form-control rounded-3", rows = 4 })
+                        @Html.ValidationMessageFor(model => model.Description, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Category", new { @class = "fw-bold mb-2" })
+                        @Html.DropDownListFor(model => model.CategoryId,
+                            (SelectList)ViewBag.CategoryId, "Select Category",
+                            new { @class = "form-control rounded-3" })
+                        @Html.ValidationMessageFor(model => model.CategoryId, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Department", new { @class = "fw-bold mb-2" })
+                        @Html.DropDownListFor(model => model.DepartmentId,
+                            (SelectList)ViewBag.DepartmentId, "Select Department",
+                            new { @class = "form-control rounded-3" })
+                        @Html.ValidationMessageFor(model => model.DepartmentId, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Size", new { @class = "fw-bold mb-2" })
+                        @Html.DropDownListFor(model => model.Size, (SelectList)ViewBag.Sizes,
+                            "Select Size", new { @class = "form-control rounded-3" })
+                        @Html.ValidationMessageFor(model => model.Size, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Age Group", new { @class = "fw-bold mb-2" })
+                        @Html.DropDownListFor(model => model.AgeGroup, (SelectList)ViewBag.AgeGroups,
+                            "Select Age Group", new { @class = "form-control rounded-3" })
+                        @Html.ValidationMessageFor(model => model.AgeGroup, "",
+                            new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-md-6">
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Ethnic Group", new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.EthnicGroup,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.EthnicGroup, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Occasion", new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.Occasion,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.Occasion, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Product Type", new { @class = "fw-bold mb-2" })
+                        @Html.DropDownListFor(model => model.ProductType,
+                            new SelectList(new[] {
+                                new { Value = "Buy", Text = "For Purchase Only" },
+                                new { Value = "Rent", Text = "For Rental Only" },
+                                new { Value = "Both", Text = "For Both Purchase and Rental" }
+                            }, "Value", "Text"),
+                            "Select Product Type",
+                            new { @class = "form-control rounded-3", id = "productType" })
+                        @Html.ValidationMessageFor(model => model.ProductType, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3" id="priceSection" style="display: none;">
+                        @Html.Label("Price (R)", new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.Price,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.Price, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3" id="rentalSection" style="display: none;">
+                        @Html.Label("Rental Fee per Day (R)", new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.RentalFee,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.RentalFee, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Stock", new { @class = "fw-bold mb-2" })
+                        @Html.EditorFor(model => model.Stock,
+                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                        @Html.ValidationMessageFor(model => model.Stock, "",
+                            new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        @Html.Label("Product Image", new { @class = "fw-bold mb-2" })
+                        <input type="file" name="ImageFile" id="ImageFile"
+                               class="form-control rounded-3" />
+                        @Html.ValidationMessageFor(model => model.ImagePath, "",
+                            new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Fields -->
+            @Html.HiddenFor(model => model.DateCreated)
+            @Html.HiddenFor(model => model.LastUpdated)
+            @Html.HiddenFor(model => model.IsActive)
+
+            <!-- Buttons -->
+            <div class="text-center mt-4">
+                <input type="submit" value="Create Product"
+                       class="btn btn-success px-4 py-2 rounded-3"
+                       style="font-size:1.1rem;" />
+                @Html.ActionLink("Cancel", "Index", null,
+                       new { @class = "btn btn-secondary px-4 py-2 rounded-3 ms-2" })
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function() {
+            // Handle product type change
+            $('#productType').change(function() {
+                var selectedType = $(this).val();
+                
+                // Hide all sections first
+                $('#priceSection').hide();
+                $('#rentalSection').hide();
+                
+                // Show relevant sections based on selection
+                if (selectedType === 'Buy') {
+                    $('#priceSection').show();
+                } else if (selectedType === 'Rent') {
+                    $('#rentalSection').show();
+                } else if (selectedType === 'Both') {
+                    $('#priceSection').show();
+                    $('#rentalSection').show();
+                }
+            });
+            
+            // Trigger change event on page load if there's a selected value
+            $('#productType').trigger('change');
+        });
+    </script>
+}

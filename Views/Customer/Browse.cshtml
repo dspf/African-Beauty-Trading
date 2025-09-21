@@ -1,0 +1,335 @@
+﻿@model IEnumerable<African_Beauty_Trading.Models.Product>
+
+@{
+    ViewBag.Title = "Browse Products";
+}
+
+<div class="container mt-5" style="max-width: 1400px;">
+    <h2 class="fw-bold mb-4 text-center"
+        style="font-size:2.5rem; color:#8B0000; letter-spacing:1px; text-transform:uppercase;">
+        African Heritage Collection
+    </h2>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs justify-content-center mb-4" id="productTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#purchase-section" 
+                    type="button" role="tab" style="color: #8B0000; font-weight: 600;">
+                <i class="fas fa-shopping-bag me-2"></i>Purchase Items
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="rental-tab" data-bs-toggle="tab" data-bs-target="#rental-section" 
+                    type="button" role="tab" style="color: #8B0000; font-weight: 600;">
+                <i class="fas fa-calendar-alt me-2"></i>Rental Items
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="productTabContent">
+        <!-- Purchase Section -->
+        <div class="tab-pane fade show active" id="purchase-section" role="tabpanel">
+            <h3 class="text-center mb-4" style="color: #006400; font-weight: 600;">
+                <i class="fas fa-shopping-cart me-2"></i>Items Available for Purchase
+            </h3>
+            <div class="row">
+                @foreach (var item in Model.Where(p => p.Price > 0))
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card h-100 product-card"
+                             style="border:none; border-radius:16px; overflow:hidden;
+                                    box-shadow:0 8px 20px rgba(0,0,0,0.15); transition:all 0.3s ease;
+                                    background: linear-gradient(145deg, #ffffff, #f8f9fa);">
+
+                            <!-- Product Image -->
+                            <div style="position:relative; overflow:hidden; height:220px;">
+                                <img src="@Url.Content(item.ImagePath ?? "~/Content/img/placeholder.png")"
+                                     alt="@item.Name"
+                                     style="width:100%; height:100%; object-fit:cover; border-radius:16px 16px 0 0;
+                                            transition: transform 0.4s ease;"
+                                     onmouseover="this.style.transform='scale(1.1)'"
+                                     onmouseout="this.style.transform='scale(1)'" />
+
+                                <span style="position:absolute; top:10px; left:10px; background:#8B0000;
+                                             color:white; padding:5px 12px; border-radius:20px;
+                                             font-size:0.8rem; font-weight:bold;">
+                                    @item.Category.Name
+                                </span>
+                                
+                                <!-- Stock Badge -->
+                                <span style="position:absolute; top:10px; right:10px; 
+                                             background:@(item.Stock > 0 ? "#28a745" : "#dc3545");
+                                             color:white; padding:5px 10px; border-radius:15px;
+                                             font-size:0.75rem; font-weight:bold;">
+                                    Stock: @item.Stock
+                                </span>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body d-flex flex-column"
+                                 style="padding:20px; display:flex; flex-direction:column;">
+
+                                <h5 class="fw-bold" style="font-size:1.2rem; color:#222; margin-bottom:10px;">
+                                    @item.Name
+                                </h5>
+                                <p style="color:#777; font-size:0.9rem; margin-bottom:6px;">
+                                    Department: <strong>@item.Department.Name</strong>
+                                </p>
+                                <p style="color:#666; font-size:0.85rem; margin-bottom:10px;">
+                                    @item.Description
+                                </p>
+
+                                <p style="color:#28a745; font-size:1.3rem; font-weight:bold; margin-bottom:12px;">
+                                    R @item.Price.ToString("F2")
+                                </p>
+
+                                <!-- Action Buttons -->
+                                <div style="margin-top:auto; display:flex; gap:8px; flex-direction:column;">
+                                    @Html.ActionLink("👀 View Details", "Details", "Customer", new { id = item.Id },
+                                        new { @class = "btn btn-outline-dark", style = "border-radius:8px; margin-bottom:8px;" })
+                                    
+                                    @if (item.Stock > 0)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select quantity-select" data-product-id="@item.Id" 
+                                                    style="max-width:80px; border-radius:8px;">
+                                                @for (int i = 1; i <= Math.Min(item.Stock, 10); i++)
+                                                {
+                                                    <option value="@i">@i</option>
+                                                }
+                                            </select>
+                                            <button class="btn btn-success add-to-cart-btn flex-fill" 
+                                                    data-product-id="@item.Id" data-is-rental="false"
+                                                    style="border-radius:8px; font-weight:600;">
+                                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary" disabled style="border-radius:8px;">
+                                            <i class="fas fa-times me-1"></i>Out of Stock
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Rental Section -->
+        <div class="tab-pane fade" id="rental-section" role="tabpanel">
+            <h3 class="text-center mb-4" style="color: #006400; font-weight: 600;">
+                <i class="fas fa-calendar-check me-2"></i>Items Available for Rental
+            </h3>
+            <div class="row">
+                @foreach (var item in Model.Where(p => p.RentalFee > 0))
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card h-100 product-card"
+                             style="border:none; border-radius:16px; overflow:hidden;
+                                    box-shadow:0 8px 20px rgba(0,0,0,0.15); transition:all 0.3s ease;
+                                    background: linear-gradient(145deg, #ffffff, #f0f8ff);">
+
+                            <!-- Product Image -->
+                            <div style="position:relative; overflow:hidden; height:220px;">
+                                <img src="@Url.Content(item.ImagePath ?? "~/Content/img/placeholder.png")"
+                                     alt="@item.Name"
+                                     style="width:100%; height:100%; object-fit:cover; border-radius:16px 16px 0 0;
+                                            transition: transform 0.4s ease;"
+                                     onmouseover="this.style.transform='scale(1.1)'"
+                                     onmouseout="this.style.transform='scale(1)'" />
+
+                                <span style="position:absolute; top:10px; left:10px; background:#007bff;
+                                             color:white; padding:5px 12px; border-radius:20px;
+                                             font-size:0.8rem; font-weight:bold;">
+                                    @item.Category.Name
+                                </span>
+                                
+                                <!-- Stock Badge -->
+                                <span style="position:absolute; top:10px; right:10px; 
+                                             background:@(item.Stock > 0 ? "#28a745" : "#dc3545");
+                                             color:white; padding:5px 10px; border-radius:15px;
+                                             font-size:0.75rem; font-weight:bold;">
+                                    Stock: @item.Stock
+                                </span>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body d-flex flex-column"
+                                 style="padding:20px; display:flex; flex-direction:column;">
+
+                                <h5 class="fw-bold" style="font-size:1.2rem; color:#222; margin-bottom:10px;">
+                                    @item.Name
+                                </h5>
+                                <p style="color:#777; font-size:0.9rem; margin-bottom:6px;">
+                                    Department: <strong>@item.Department.Name</strong>
+                                </p>
+                                <p style="color:#666; font-size:0.85rem; margin-bottom:10px;">
+                                    @item.Description
+                                </p>
+
+                                <p style="color:#007bff; font-size:1.3rem; font-weight:bold; margin-bottom:12px;">
+                                    R @item.RentalFee.ToString("F2") <span style="font-size:0.8rem; color:#666;">/day</span>
+                                </p>
+
+                                <!-- Action Buttons -->
+                                <div style="margin-top:auto; display:flex; gap:8px; flex-direction:column;">
+                                    @Html.ActionLink("👀 View Details", "Details", "Customer", new { id = item.Id },
+                                        new { @class = "btn btn-outline-dark", style = "border-radius:8px; margin-bottom:8px;" })
+                                    
+                                    @if (item.Stock > 0)
+                                    {
+                                        
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary" disabled style="border-radius:8px;">
+                                            <i class="fas fa-times me-1"></i>Out of Stock
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.nav-tabs .nav-link {
+    border: 2px solid transparent;
+    border-radius: 10px 10px 0 0;
+    margin-right: 10px;
+    font-size: 1.1rem;
+    padding: 12px 24px;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #8B0000;
+    color: white !important;
+    border-color: #8B0000;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: rgba(139, 0, 0, 0.1);
+    border-color: #8B0000;
+}
+
+.product-card {
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+
+.quantity-select {
+    border: 2px solid #ddd;
+}
+
+.quantity-select:focus {
+    border-color: #8B0000;
+    box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
+}
+</style>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    
+    <script>
+    $(document).ready(function() {
+        // Add to cart functionality
+        $('.add-to-cart-btn').click(function(e) {
+            e.preventDefault();
+            
+            var productId = $(this).data('product-id');
+            var isRental = $(this).data('is-rental');
+            var quantity = $(this).closest('.card-body').find('.quantity-select').val() || 1;
+            
+            // Check if user is authenticated
+            @if (User.Identity.IsAuthenticated)
+            {
+                <text>
+                // User is logged in - add to cart
+                $.post('@Url.Action("AddToCart", "Cart")', {
+                    productId: productId,
+                    isRental: isRental,
+                    quantity: quantity
+                }, function(response) {
+                    if (response.success) {
+                        // Show success message
+                        showToast(response.message, 'success');
+                        
+                        // Update cart count if you have one
+                        updateCartCount();
+                    } else {
+                        // Show error message for stock issues
+                        showToast(response.message, 'error');
+                        
+                        // If out of stock, disable the button and update UI
+                        if (response.message.includes('out of stock')) {
+                            var button = $('[data-product-id="' + productId + '"][data-is-rental="' + isRental + '"]');
+                            button.prop('disabled', true)
+                                  .removeClass('btn-success btn-primary')
+                                  .addClass('btn-secondary')
+                                  .html('<i class="fas fa-times me-1"></i>Out of Stock');
+                            
+                            // Hide quantity selector
+                            button.closest('.d-flex').find('.quantity-select').hide();
+                        }
+                    }
+                }).fail(function() {
+                    showToast('Error adding item to cart', 'error');
+                });
+                </text>
+            }
+            else
+            {
+                <text>
+                // User not logged in - redirect to login
+                window.location.href = '@Url.Action("Login", "Account")';
+                </text>
+            }
+        });
+        
+        // Toast notification function
+        function showToast(message, type) {
+            var toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            var toast = $('<div class="toast align-items-center text-white ' + toastClass + ' border-0" role="alert">' +
+                         '<div class="d-flex"><div class="toast-body">' + message + '</div>' +
+                         '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>');
+            
+            $('body').append(toast);
+            var bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+            
+            // Remove toast after it's hidden
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+        
+        // Update cart count function (implement if you have a cart counter)
+        function updateCartCount() {
+            // Implementation depends on your cart counter element
+        }
+        
+        // Product card hover effects
+        $('.product-card').hover(
+            function() {
+                $(this).css('transform', 'translateY(-5px)');
+            },
+            function() {
+                $(this).css('transform', 'translateY(0)');
+            }
+        );
+    });
+    </script>
+}

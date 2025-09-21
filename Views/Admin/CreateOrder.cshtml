@@ -1,0 +1,347 @@
+@{
+    ViewBag.Title = "Create Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Create New Order</h3>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("CreateOrder", "Admin", FormMethod.Post, new { @class = "form-horizontal", id = "createOrderForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="CustomerId" class="control-label">Select Customer</label>
+                                    @Html.DropDownList("CustomerId", ViewBag.CustomerId as SelectList, "-- Select Customer --", new { @class = "form-control", required = "required" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Priority Section -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="control-label">Delivery Priority</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check border rounded p-3">
+                                                <input class="form-check-input" type="radio" name="Priority" id="priorityNormal" value="Normal" checked>
+                                                <label class="form-check-label" for="priorityNormal">
+                                                    <i class="fas fa-flag text-success me-2"></i>
+                                                    <strong>Normal Delivery</strong>
+                                                    <br>
+                                                    <small class="text-muted">Standard delivery timeframe</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check border rounded p-3">
+                                                <input class="form-check-input" type="radio" name="Priority" id="priorityUrgent" value="Urgent">
+                                                <label class="form-check-label" for="priorityUrgent">
+                                                    <i class="fas fa-flag text-danger me-2"></i>
+                                                    <strong>Urgent Delivery</strong>
+                                                    <br>
+                                                    <small class="text-muted">Priority delivery required</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h4>Order Items</h4>
+                        
+                        <div id="orderItems">
+                            <div class="order-item-row" data-index="0">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="control-label">Product</label>
+                                                <select name="orderItems[0].ProductId" class="form-control product-select" required>
+                                                    <option value="">-- Select Product --</option>
+                                                    @foreach (var product in ViewBag.Products as List<African_Beauty_Trading.Models.Product>)
+                                                    {
+                                                        <option value="@product.Id" data-price="@product.Price" data-rental-price="@product.RentalPricePerDay" data-rental-deposit="@product.RentalDeposit" data-stock="@product.Stock" data-can-rent="@(product.RentalPricePerDay.HasValue ? "true" : "false")">@product.Name (Stock: @product.Stock)</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="control-label">Quantity</label>
+                                                <input type="number" name="orderItems[0].Quantity" class="form-control quantity-input" min="1" value="1" required />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="control-label">Type</label>
+                                                <select name="orderItems[0].IsRental" class="form-control rental-select">
+                                                    <option value="false">Purchase</option>
+                                                    <option value="true">Rental</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2 rental-dates" style="display: none;">
+                                                <label class="control-label">Start Date</label>
+                                                <input type="date" name="orderItems[0].RentalStartDate" class="form-control rental-start" />
+                                            </div>
+                                            <div class="col-md-2 rental-dates" style="display: none;">
+                                                <label class="control-label">End Date</label>
+                                                <input type="date" name="orderItems[0].RentalEndDate" class="form-control rental-end" />
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="control-label">&nbsp;</label>
+                                                <button type="button" class="btn btn-danger btn-block remove-item" style="display: none;">Remove</button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-12">
+                                                <div class="item-total">Total: R 0.00</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" id="addItem" class="btn btn-secondary">Add Another Item</button>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>Order Total: <span id="orderTotal">R 0.00</span></h4>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button type="submit" class="btn btn-primary">Create Order</button>
+                                @Html.ActionLink("Cancel", "Orders", null, new { @class = "btn btn-secondary" })
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var itemIndex = 1;
+    
+    // Add new item
+    $('#addItem').click(function() {
+        var newItem = $('.order-item-row:first').clone();
+        newItem.attr('data-index', itemIndex);
+        
+        // Update input names and IDs
+        newItem.find('input, select').each(function() {
+            var name = $(this).attr('name');
+            if (name) {
+                $(this).attr('name', name.replace('[0]', '[' + itemIndex + ']'));
+            }
+            $(this).val('');
+        });
+        
+        // Reset values
+        newItem.find('.product-select').val('');
+        newItem.find('.quantity-input').val('1');
+        newItem.find('.rental-select').val('false');
+        newItem.find('.rental-dates').hide();
+        newItem.find('.remove-item').show();
+        newItem.find('.item-total').text('Total: R 0.00');
+        
+        $('#orderItems').append(newItem);
+        itemIndex++;
+        
+        updateRemoveButtons();
+    });
+    
+    // Remove item
+    $(document).on('click', '.remove-item', function() {
+        $(this).closest('.order-item-row').remove();
+        updateRemoveButtons();
+        calculateOrderTotal();
+    });
+    
+    // Show/hide rental dates
+    $(document).on('change', '.rental-select', function() {
+        var isRental = $(this).val() === 'true';
+        var row = $(this).closest('.order-item-row');
+        
+        if (isRental) {
+            row.find('.rental-dates').show();
+            row.find('.rental-start, .rental-end').attr('required', true);
+            
+            // Set default dates - 3 days rental period
+            var today = new Date().toISOString().split('T')[0];
+            var threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            row.find('.rental-start').val(today);
+            row.find('.rental-end').val(threeDaysLater);
+        } else {
+            row.find('.rental-dates').hide();
+            row.find('.rental-start, .rental-end').removeAttr('required');
+        }
+        
+        calculateItemTotal(row);
+    });
+    
+    // Auto-set return date when rental start date changes
+    $(document).on('change', '.rental-start', function() {
+        var row = $(this).closest('.order-item-row');
+        var startDate = new Date($(this).val());
+        
+        if (startDate) {
+            var endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 3);
+            row.find('.rental-end').val(endDate.toISOString().split('T')[0]);
+        }
+        
+        calculateItemTotal(row);
+    });
+    
+    // Calculate item total when product, quantity, or dates change
+    $(document).on('change', '.product-select, .quantity-input, .rental-end', function() {
+        var row = $(this).closest('.order-item-row');
+        calculateItemTotal(row);
+    });
+    
+    function calculateItemTotal(row) {
+        var productSelect = row.find('.product-select');
+        var quantity = parseInt(row.find('.quantity-input').val()) || 0;
+        var isRental = row.find('.rental-select').val() === 'true';
+        
+        if (!productSelect.val() || quantity === 0) {
+            row.find('.item-total').text('Total: R 0.00');
+            calculateOrderTotal();
+            return;
+        }
+        
+        var selectedOption = productSelect.find('option:selected');
+        var total = 0;
+        
+        if (isRental) {
+            var rentalPrice = parseFloat(selectedOption.data('rental-price')) || 0;
+            var deposit = parseFloat(selectedOption.data('rental-deposit')) || 0;
+            var startDate = new Date(row.find('.rental-start').val());
+            var endDate = new Date(row.find('.rental-end').val());
+            
+            if (startDate && endDate && endDate >= startDate) {
+                var days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                total = (rentalPrice * days * quantity) + (deposit * quantity);
+            }
+        } else {
+            var price = parseFloat(selectedOption.data('price')) || 0;
+            total = price * quantity;
+        }
+        
+        row.find('.item-total').text('Total: R ' + total.toFixed(2));
+        calculateOrderTotal();
+    }
+    
+    function calculateOrderTotal() {
+        var total = 0;
+        $('.item-total').each(function() {
+            var itemTotal = parseFloat($(this).text().replace('Total: R ', '')) || 0;
+            total += itemTotal;
+        });
+        $('#orderTotal').text('R ' + total.toFixed(2));
+    }
+    
+    function updateRemoveButtons() {
+        var itemCount = $('.order-item-row').length;
+        if (itemCount > 1) {
+            $('.remove-item').show();
+        } else {
+            $('.remove-item').hide();
+        }
+    }
+    
+    // Validate stock
+    $(document).on('change', '.product-select, .quantity-input', function() {
+        var row = $(this).closest('.order-item-row');
+        var productSelect = row.find('.product-select');
+        var quantityInput = row.find('.quantity-input');
+        
+        if (productSelect.val()) {
+            var selectedOption = productSelect.find('option:selected');
+            var stock = parseInt(selectedOption.data('stock')) || 0;
+            var quantity = parseInt(quantityInput.val()) || 0;
+            
+            if (quantity > stock) {
+                alert('Quantity cannot exceed available stock (' + stock + ')');
+                quantityInput.val(stock);
+                calculateItemTotal(row);
+            }
+            
+            // Enable/disable rental option based on product
+            var canRent = selectedOption.data('can-rent') === 'true';
+            var rentalSelect = row.find('.rental-select');
+            
+            if (!canRent) {
+                rentalSelect.val('false').prop('disabled', true);
+                row.find('.rental-dates').hide();
+            } else {
+                rentalSelect.prop('disabled', false);
+            }
+        }
+    });
+});
+</script>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .form-check {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .form-check:hover {
+        background-color: #f8f9fa;
+        border-color: #007bff !important;
+    }
+
+    .form-check input[type="radio"]:checked + label {
+        color: #007bff;
+    }
+
+    .form-check input[type="radio"]:checked ~ .form-check {
+        border-color: #007bff !important;
+        background-color: #e7f3ff;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+    }
+</style>
+
+<style>
+.order-item-row {
+    margin-bottom: 15px;
+}
+
+.item-total {
+    font-weight: bold;
+    color: #28a745;
+    font-size: 1.1em;
+}
+
+#orderTotal {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.rental-dates {
+    border-left: 3px solid #ffc107;
+    padding-left: 10px;
+}
+</style>

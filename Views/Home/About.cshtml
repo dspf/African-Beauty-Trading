@@ -1,0 +1,303 @@
+﻿@{
+    ViewBag.Title = "About Us - African Heritage Trading";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary: #8B4513;
+        --secondary: #D4AF37;
+        --accent: #006B3C;
+        --light: #F8F0E3;
+        --dark: #2C2C2C;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        background-color: #fefefe;
+    }
+
+    .about-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1518471152226-4286d54cac2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80') center/cover no-repeat !important;
+    }
+
+    .section-title {
+        position: relative;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--secondary);
+        }
+
+    .value-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .value-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+    .value-icon {
+        font-size: 2.5rem;
+        color: var(--secondary);
+        margin-bottom: 20px;
+    }
+
+    .cultural-pattern {
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d4af37' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        background-attachment: fixed;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 40px;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+            .feature-list li:before {
+                content: '✓';
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 30px;
+                height: 30px;
+                background: var(--secondary);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+
+    .btn-cultural {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-cultural:hover {
+            background: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+
+    .cultural-border {
+        border: 2px solid var(--secondary);
+        border-radius: 10px;
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.2s;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.4s;
+    }
+
+    .animate-delay-3 {
+        animation-delay: 0.6s;
+    }
+
+    .cultural-bg {
+        background: linear-gradient(135deg, var(--light) 0%, #fff 100%);
+    }
+</style>
+
+
+<div class="about-hero d-flex align-items-center text-center text-white"
+     style="height:70vh;">
+    <div class="container">
+        <h1 class="display-3 fw-bold animate__animated animate__fadeInDown mb-4">About African Heritage Trading</h1>
+        <p class="lead animate__animated animate__fadeInUp mb-4" style="font-size: 1.5rem;">Celebrating Culture • Honoring Tradition • Inspiring Fashion</p>
+        <div class="animate__animated animate__fadeInUp animate__delay-1s">
+            <a href="#our-story" class="btn btn-cultural btn-lg me-3"><i class="fas fa-book me-2"></i>Our Story</a>
+            <a href="@Url.Action("Browse","Products")" class="btn btn-outline-light btn-lg"><i class="fas fa-shopping-bag me-2"></i>Shop Now</a>
+        </div>
+    </div>
+</div>
+
+<section id="our-story" class="py-5 cultural-bg cultural-pattern">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <img src="https://images.unsplash.com/photo-1532635242-8e2ccee8ec2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80"
+                     class="img-fluid rounded cultural-border shadow-lg" alt="African Heritage Trading Story" />
+            </div>
+            <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <h2 class="section-title fw-bold text-start">Our Story</h2>
+                <p class="lead">
+                    African Heritage Trading was founded with a passionate mission to make traditional African
+                    attire accessible, stylish, and relevant for modern occasions.
+                </p>
+                <p>
+                    We believe every outfit carries a story — from weddings and graduations to cultural celebrations
+                    and everyday wear. Our platform bridges the gap between traditional craftsmanship and contemporary
+                    fashion needs.
+                </p>
+                <p>
+                    Whether you choose to <strong>rent</strong> for a special event or <strong>buy</strong> to build your cultural wardrobe,
+                    our carefully curated collection ensures authenticity, quality, and elegance in every detail.
+                </p>
+                <div class="mt-4">
+                    <a href="@Url.Action("Contact","Home")" class="btn btn-cultural"><i class="fas fa-handshake me-2"></i>Partner With Us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white">
+    <div class="container py-5">
+        <h2 class="section-title fw-bold">Our Values & Principles</h2>
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp">
+                <div class="value-card card h-100 p-4 text-center">
+                    <div class="value-icon">
+                        <i class="fas fa-roots"></i>
+                    </div>
+                    <h4 class="fw-bold">Cultural Authenticity</h4>
+                    <p>We honor and preserve African traditions through genuine designs, authentic fabrics, and respect for cultural significance in every garment.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp animate-delay-1">
+                <div class="value-card card h-100 p-4 text-center">
+                    <div class="value-icon">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h4 class="fw-bold">Community Empowerment</h4>
+                    <p>We partner with local artisans, tailors, and communities across Africa, ensuring fair trade and economic empowerment through cultural preservation.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp animate-delay-2">
+                <div class="value-card card h-100 p-4 text-center">
+                    <div class="value-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h4 class="fw-bold">Sustainable Fashion</h4>
+                    <p>By promoting rental alongside purchase, we reduce textile waste and encourage a circular economy for traditional fashion.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 cultural-bg">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 order-2 order-lg-1 animate__animated animate__fadeInLeft">
+                <h2 class="section-title fw-bold text-start">Why Choose African Heritage Trading?</h2>
+                <ul class="feature-list">
+                    <li><strong>Wide Selection:</strong> Extensive collection of authentic African attire from various regions and cultures</li>
+                    <li><strong>Flexible Options:</strong> Affordable rentals for special occasions and purchase options for keepsakes</li>
+                    <li><strong>Quality Assurance:</strong> All garments are professionally cleaned, maintained, and quality checked</li>
+                    <li><strong>Reliable Service:</strong> Efficient delivery system with tracking and professional drivers</li>
+                    <li><strong>Cultural Expertise:</strong> Knowledgeable staff to help you select appropriate attire for any occasion</li>
+                </ul>
+                <div class="mt-4">
+                    <a href="@Url.Action("Browse","Products")" class="btn btn-cultural"><i class="fas fa-tshirt me-2"></i>Explore Collection</a>
+                </div>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0 animate__animated animate__fadeInRight">
+                <img src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+                     class="img-fluid rounded cultural-border shadow-lg" alt="Why Choose Us" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-dark text-white">
+    <div class="container py-5 text-center">
+        <h2 class="fw-bold mb-4">Join Our Cultural Journey</h2>
+        <p class="lead mb-5">Become part of a growing community that celebrates African heritage and supports traditional craftsmanship</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4 mb-3 mb-md-0 animate__animated animate__fadeInUp">
+                        <div class="border cultural-border p-4 h-100 rounded">
+                            <i class="fas fa-user-friends fa-3x mb-3" style="color: var(--secondary);"></i>
+                            <h5>For Customers</h5>
+                            <p>Discover perfect attire for your special events</p>
+                            <a href="@Url.Action("Register","Account")" class="btn btn-outline-light btn-sm mt-2">Sign Up</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0 animate__animated animate__fadeInUp animate-delay-1">
+                        <div class="border cultural-border p-4 h-100 rounded">
+                            <i class="fas fa-hands-helping fa-3x mb-3" style="color: var(--secondary);"></i>
+                            <h5>For Artisans</h5>
+                            <p>Partner with us to showcase your craftsmanship</p>
+                            <a href="@Url.Action("Contact","Home")" class="btn btn-outline-light btn-sm mt-2">Collaborate</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 animate__animated animate__fadeInUp animate-delay-2">
+                        <div class="border cultural-border p-4 h-100 rounded">
+                            <i class="fas fa-store fa-3x mb-3" style="color: var(--secondary);"></i>
+                            <h5>For Businesses</h5>
+                            <p>Explore wholesale and corporate gifting options</p>
+                            <a href="@Url.Action("Contact","Home")" class="btn btn-outline-light btn-sm mt-2">Contact Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Simple animation trigger on scroll
+        document.addEventListener('DOMContentLoaded', function () {
+            const animatedElements = document.querySelectorAll('.animate__animated');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const animation = entry.target.getAttribute('data-animation');
+                        entry.target.classList.add(animation);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            animatedElements.forEach(el => {
+                const animation = Array.from(el.classList).find(cls => cls.startsWith('animate__'));
+                if (animation) {
+                    el.setAttribute('data-animation', animation);
+                    el.classList.remove(animation);
+                    observer.observe(el);
+                }
+            });
+        });
+    </script>
+}
