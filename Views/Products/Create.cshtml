@@ -2,190 +2,196 @@
 
 @{
     ViewBag.Title = "Create Product";
+    var allSizes = ViewBag.AllSizes as List<string> ?? new List<string>();
 }
 
-<div class="container mt-5" style="max-width: 1000px;">
-    <div class="card shadow-lg border-0 rounded-4"
-         style="background: #fff; padding:30px;">
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="container mt-5" style="max-width: 1000px;">
+    @Html.AntiForgeryToken()
 
-        <h2 class="fw-bold mb-4 text-center"
-            style="font-size:2rem; color:#333; letter-spacing:1px; text-transform:uppercase;">
+    <div class="card shadow-lg border-0 rounded-4" style="background: #fff; padding:30px;">
+        <h2 class="fw-bold mb-4 text-center" style="font-size:2rem; color:#333; letter-spacing:1px; text-transform:uppercase;">
             Create New Product
         </h2>
 
-        @using (Html.BeginForm("Create", "Products", FormMethod.Post,
-                               new { enctype = "multipart/form-data", @class = "needs-validation" }))
-        {
-            @Html.AntiForgeryToken()
-            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
 
-            <div class="row g-4">
-                <!-- Left Column -->
-                <div class="col-md-6">
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-md-6">
 
-                    <div class="form-group mb-3">
-                        @Html.LabelFor(model => model.Name, "Product Name",
-                            htmlAttributes: new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.Name,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.Name, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.LabelFor(model => model.Description, "Description",
-                            htmlAttributes: new { @class = "fw-bold mb-2" })
-                        @Html.TextAreaFor(model => model.Description,
-                            new { @class = "form-control rounded-3", rows = 4 })
-                        @Html.ValidationMessageFor(model => model.Description, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Category", new { @class = "fw-bold mb-2" })
-                        @Html.DropDownListFor(model => model.CategoryId,
-                            (SelectList)ViewBag.CategoryId, "Select Category",
-                            new { @class = "form-control rounded-3" })
-                        @Html.ValidationMessageFor(model => model.CategoryId, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Department", new { @class = "fw-bold mb-2" })
-                        @Html.DropDownListFor(model => model.DepartmentId,
-                            (SelectList)ViewBag.DepartmentId, "Select Department",
-                            new { @class = "form-control rounded-3" })
-                        @Html.ValidationMessageFor(model => model.DepartmentId, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Size", new { @class = "fw-bold mb-2" })
-                        @Html.DropDownListFor(model => model.Size, (SelectList)ViewBag.Sizes,
-                            "Select Size", new { @class = "form-control rounded-3" })
-                        @Html.ValidationMessageFor(model => model.Size, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Age Group", new { @class = "fw-bold mb-2" })
-                        @Html.DropDownListFor(model => model.AgeGroup, (SelectList)ViewBag.AgeGroups,
-                            "Select Age Group", new { @class = "form-control rounded-3" })
-                        @Html.ValidationMessageFor(model => model.AgeGroup, "",
-                            new { @class = "text-danger" })
-                    </div>
+                <div class="form-group mb-3">
+                    @Html.LabelFor(model => model.Name, "Product Name", htmlAttributes: new { @class = "fw-bold mb-2" })
+                    @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control rounded-3" } })
+                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
                 </div>
 
-                <!-- Right Column -->
-                <div class="col-md-6">
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Ethnic Group", new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.EthnicGroup,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.EthnicGroup, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Occasion", new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.Occasion,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.Occasion, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Product Type", new { @class = "fw-bold mb-2" })
-                        @Html.DropDownListFor(model => model.ProductType,
-                            new SelectList(new[] {
-                                new { Value = "Buy", Text = "For Purchase Only" },
-                                new { Value = "Rent", Text = "For Rental Only" },
-                                new { Value = "Both", Text = "For Both Purchase and Rental" }
-                            }, "Value", "Text"),
-                            "Select Product Type",
-                            new { @class = "form-control rounded-3", id = "productType" })
-                        @Html.ValidationMessageFor(model => model.ProductType, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3" id="priceSection" style="display: none;">
-                        @Html.Label("Price (R)", new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.Price,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.Price, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3" id="rentalSection" style="display: none;">
-                        @Html.Label("Rental Fee per Day (R)", new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.RentalFee,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.RentalFee, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Stock", new { @class = "fw-bold mb-2" })
-                        @Html.EditorFor(model => model.Stock,
-                            new { htmlAttributes = new { @class = "form-control rounded-3" } })
-                        @Html.ValidationMessageFor(model => model.Stock, "",
-                            new { @class = "text-danger" })
-                    </div>
-
-                    <div class="form-group mb-3">
-                        @Html.Label("Product Image", new { @class = "fw-bold mb-2" })
-                        <input type="file" name="ImageFile" id="ImageFile"
-                               class="form-control rounded-3" />
-                        @Html.ValidationMessageFor(model => model.ImagePath, "",
-                            new { @class = "text-danger" })
-                    </div>
+                <div class="form-group mb-3">
+                    @Html.LabelFor(model => model.Description, "Description", htmlAttributes: new { @class = "fw-bold mb-2" })
+                    @Html.TextAreaFor(model => model.Description, new { @class = "form-control rounded-3", rows = 4 })
+                    @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
                 </div>
+
+                <div class="form-group mb-3">
+                    @Html.Label("Category", new { @class = "fw-bold mb-2" })
+                    @Html.DropDownListFor(model => model.CategoryId, (SelectList)ViewBag.CategoryId, "Select Category", new { @class = "form-control rounded-3" })
+                    @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger" })
+                </div>
+
+                <!-- Size Selection -->
+                <div class="form-group mb-3">
+                    <label class="fw-bold mb-2">Available Sizes</label>
+                    <div class="alert alert-info py-2">
+                        <small><i class="fas fa-info-circle me-1"></i> Select all sizes available for this product</small>
+                    </div>
+
+                    <div class="size-selection-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px;">
+                        <div class="row g-2">
+                            @foreach (var size in allSizes)
+                            {
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input size-checkbox" type="checkbox" name="SelectedSizes" value="@size" id="size-@size.Replace(" ", "-").ToLower()" />
+                                        <label class="form-check-label" for="size-@size.Replace(" ", "-").ToLower()">
+                                            @size
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <small class="text-muted">If no sizes are selected, "One Size" will be used as default.</small>
+                </div>
+
             </div>
 
-            <!-- Hidden Fields -->
-            @Html.HiddenFor(model => model.DateCreated)
-            @Html.HiddenFor(model => model.LastUpdated)
-            @Html.HiddenFor(model => model.IsActive)
+            <!-- Right Column -->
+            <div class="col-md-6">
 
-            <!-- Buttons -->
-            <div class="text-center mt-4">
-                <input type="submit" value="Create Product"
-                       class="btn btn-success px-4 py-2 rounded-3"
-                       style="font-size:1.1rem;" />
-                @Html.ActionLink("Cancel", "Index", null,
-                       new { @class = "btn btn-secondary px-4 py-2 rounded-3 ms-2" })
+                <div class="form-group mb-3">
+                    @Html.LabelFor(model => model.Price, "Price (R)", htmlAttributes: new { @class = "fw-bold mb-2" })
+                    @Html.EditorFor(model => model.Price, new { htmlAttributes = new { @class = "form-control rounded-3", type = "number", step = "0.01", min = "0.01" } })
+                    @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
+                    <small class="text-muted">Enter amount in Rand (R)</small>
+                </div>
+
+                <div class="form-group mb-3">
+                    @Html.LabelFor(model => model.Stock, "Stock Quantity", htmlAttributes: new { @class = "fw-bold mb-2" })
+                    @Html.EditorFor(model => model.Stock, new { htmlAttributes = new { @class = "form-control rounded-3", type = "number", min = "0" } })
+                    @Html.ValidationMessageFor(model => model.Stock, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group mb-3">
+                    @Html.Label("Product Image", new { @class = "fw-bold mb-2" })
+                    <input type="file" name="ImageFile" id="ImageFile" class="form-control rounded-3" />
+                    @Html.ValidationMessageFor(model => model.ImageUrl, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group form-check mb-3">
+                    @Html.CheckBoxFor(model => model.Featured, new { @class = "form-check-input" })
+                    @Html.LabelFor(model => model.Featured, "Feature this product", new { @class = "form-check-label fw-bold" })
+                </div>
+
             </div>
-        }
+        </div>
+
+        <!-- Hidden Fields -->
+        @Html.HiddenFor(model => model.CreatedAt, new { Value = DateTime.Now })
+        @Html.HiddenFor(model => model.UpdatedAt, new { Value = DateTime.Now })
+
+        <!-- Buttons -->
+        <div class="text-center mt-4">
+            <input type="submit" value="Create Product" class="btn btn-success px-4 py-2 rounded-3" style="font-size:1.1rem;" />
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-secondary px-4 py-2 rounded-3 ms-2" })
+        </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/jqueryval")
+
     <script>
-        $(document).ready(function() {
-            // Handle product type change
-            $('#productType').change(function() {
-                var selectedType = $(this).val();
-                
-                // Hide all sections first
-                $('#priceSection').hide();
-                $('#rentalSection').hide();
-                
-                // Show relevant sections based on selection
-                if (selectedType === 'Buy') {
-                    $('#priceSection').show();
-                } else if (selectedType === 'Rent') {
-                    $('#rentalSection').show();
-                } else if (selectedType === 'Both') {
-                    $('#priceSection').show();
-                    $('#rentalSection').show();
+        $(document).ready(function () {
+            // Size selection enhancement
+            $('.size-checkbox').change(function() {
+                const selectedCount = $('.size-checkbox:checked').length;
+                if (selectedCount > 0) {
+                    $('.size-selection-container').removeClass('border-danger').addClass('border-success');
+                } else {
+                    $('.size-selection-container').removeClass('border-success').addClass('border-danger');
                 }
             });
-            
-            // Trigger change event on page load if there's a selected value
-            $('#productType').trigger('change');
+
+            // Quick select buttons for common size groups
+            function addQuickSelectButtons() {
+                const sizeContainer = $('.size-selection-container');
+                const quickSelectHtml = `
+                    <div class="mb-3">
+                        <small class="fw-bold me-2">Quick Select:</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectSizeGroup('adult')">Adult Sizes</button>
+                        <button type="button" class="btn btn-sm btn-outline-success me-1" onclick="selectSizeGroup('kids')">Kids Sizes</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllSizes()">Clear All</button>
+                    </div>
+                `;
+                sizeContainer.before(quickSelectHtml);
+            }
+
+            // Add quick select buttons
+            addQuickSelectButtons();
         });
+
+        // Quick select functions
+        function selectSizeGroup(group) {
+            const adultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+            const kidsSizes = ['0-6 months', '6-12 months', '1-2 years', '2-4 years', '4-6 years', '6-8 years', '8-10 years', '10-12 years', '12+ years'];
+
+            let sizesToSelect = [];
+
+            if (group === 'adult') {
+                sizesToSelect = adultSizes;
+            } else if (group === 'kids') {
+                sizesToSelect = kidsSizes;
+            }
+
+            // Uncheck all first
+            $('.size-checkbox').prop('checked', false);
+
+            // Check the selected group
+            sizesToSelect.forEach(size => {
+                $(`#size-${size.replace(" ", "-").toLowerCase()}`).prop('checked', true);
+            });
+
+            // Trigger change event
+            $('.size-checkbox').first().trigger('change');
+        }
+
+        function clearAllSizes() {
+            $('.size-checkbox').prop('checked', false).trigger('change');
+        }
     </script>
+
+    <style>
+        .size-selection-container {
+            transition: border-color 0.3s ease;
+        }
+
+            .size-selection-container.border-success {
+                border-color: #198754 !important;
+                background-color: rgba(25, 135, 84, 0.05);
+            }
+
+            .size-selection-container.border-danger {
+                border-color: #dc3545 !important;
+                background-color: rgba(220, 53, 69, 0.05);
+            }
+
+        .form-check {
+            margin-bottom: 5px;
+        }
+
+        .form-check-input:checked {
+            background-color: #198754;
+            border-color: #198754;
+        }
+    </style>
 }

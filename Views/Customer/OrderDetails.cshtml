@@ -1,0 +1,74 @@
+@model African_Beauty_Trading.Models.Order
+@{
+    ViewBag.Title = "Order Details";
+}
+
+<div class="container mt-4">
+    <h2>Order Details</h2>
+    
+    @Html.Partial("_OrderDetails", Model)
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Courier Tracking</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6>Tracking Information</h6>
+                        <p>
+                            <strong>Courier:</strong> @Model.CourierName<br />
+                            <strong>Tracking Number:</strong> @Model.CourierTrackingNumber<br />
+                            <strong>Status:</strong> @Model.CourierStatus
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6>Delivery Timeline</h6>
+                        <div class="progress">
+                            @{
+                                int progressPercentage = 0;
+                                
+                                if (Model.CourierStatus == "Processing")
+                                {
+                                    progressPercentage = 25;
+                                }
+                                else if (Model.CourierStatus == "Shipped")
+                                {
+                                    progressPercentage = 50;
+                                }
+                                else if (Model.CourierStatus == "Out for Delivery")
+                                {
+                                    progressPercentage = 75;
+                                }
+                                else if (Model.CourierStatus == "Delivered")
+                                {
+                                    progressPercentage = 100;
+                                }
+                            }
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @progressPercentage%;" 
+                                 aria-valuenow="@progressPercentage" aria-valuemin="0" aria-valuemax="100">@progressPercentage%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small>Processing</small>
+                            <small>Shipped</small>
+                            <small>Out for Delivery</small>
+                            <small>Delivered</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Your order is being processed through PEP courier services. 
+                You will receive updates as your package moves through our delivery network.
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="@Url.Action("Orders", "Customer")" class="btn btn-secondary">Back to Orders</a>
+    </div>
+</div>

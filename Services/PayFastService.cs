@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Globalization;
 
 namespace African_Beauty_Trading.Services
 {
@@ -34,7 +35,8 @@ namespace African_Beauty_Trading.Services
             query["notify_url"] = notifyUrl;
 
             query["m_payment_id"] = orderId;
-            query["amount"] = totalAmount.ToString("F2"); // ✅ Use the renamed parameter
+            // ✅ Ensure dot as decimal separator for PayFast
+            query["amount"] = totalAmount.ToString("F2", CultureInfo.InvariantCulture);
             query["item_name"] = itemName;
 
             // ✅ Build the URL and LOG it

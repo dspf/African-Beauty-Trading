@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using System.Web.Helpers;
 
 namespace African_Beauty_Trading
 {
@@ -16,6 +17,9 @@ namespace African_Beauty_Trading
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            // Ensure anti-forgery tokens bind to the ASP.NET Identity user ID claim
+            AntiForgeryConfig.UniqueClaimTypeIdentifier = System.Security.Claims.ClaimTypes.NameIdentifier;
         }
     }
 }

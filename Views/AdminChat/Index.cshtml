@@ -1,0 +1,31 @@
+﻿@model IEnumerable<African_Beauty_Trading.Models.ChatRoom>
+
+@{
+    ViewBag.Title = "Admin Chat";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container">
+    <h2>Admin Chat Dashboard</h2>
+    <p>Open a chat room to start messaging with customers.</p>
+
+    <div id="rooms-list">
+        <!-- rooms will be rendered from server side or via AJAX -->
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Basic connection example for admin dashboard
+            let connection = null;
+            try {
+                connection = new signalR.HubConnectionBuilder().withUrl('/chathub').withAutomaticReconnect().build();
+                connection.start().then(() => console.log('SignalR connected (admin dashboard)')).catch(err => console.error(err));
+            } catch (e) {
+                console.warn('SignalR not available', e);
+            }
+        });
+    </script>
+}

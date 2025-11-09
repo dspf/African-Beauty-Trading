@@ -2,6 +2,21 @@
 @{
     ViewBag.Title = "Shopping Cart";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    decimal initialSubtotal = Model.Sum(c => c.Price * c.Quantity);
+
+    // Create a dictionary of product stock levels
+    var stockDictionary = new Dictionary<int, int>();
+    using (var db = new African_Beauty_Trading.Models.ApplicationDbContext())
+    {
+        foreach (var item in Model)
+        {
+            var product = db.Products.Find(item.ProductId);
+            if (product != null)
+            {
+                stockDictionary[item.ProductId] = product.Stock;
+            }
+        }
+    }
 }
 
 <div class="container mt-4">
@@ -46,8 +61,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th scope="col">Product</th>
-                                    <th scope="col">Type</th>
                                     <th scope="col" class="text-center">Quantity</th>
+                                    <th scope="col" class="text-center">Available Stock</th>
                                     <th scope="col" class="text-end">Unit Price</th>
                                     <th scope="col" class="text-end">Total</th>
                                     <th scope="col"></th>
@@ -57,7 +72,17 @@
                                 @for (int i = 0; i < Model.Count; i++)
                                 {
                                     var item = Model[i];
-                                    <tr data-product-id="@item.ProductId" data-is-rental="@item.IsRental.ToString().ToLower()">
+                                    decimal unitPrice = item.Price;
+                                    decimal itemTotal = unitPrice * item.Quantity;
+                                    string unitPriceString = unitPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+                                    // Get available stock for this product
+                                    int availableStock = stockDictionary.ContainsKey(item.ProductId) ? stockDictionary[item.ProductId] : 0;
+                                    bool isLowStock = availableStock <= 5;
+                                    bool isOutOfStock = availableStock == 0;
+                                    int maxAllowed = Math.Min(availableStock, 10); // Cap at 10 per order but respect stock
+
+                                    <tr data-product-id="@item.ProductId" class="@(isOutOfStock ? "table-danger" : isLowStock ? "table-warning" : "")">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 @if (!string.IsNullOrEmpty(item.ImagePath))
@@ -73,47 +98,74 @@
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-0">@item.ProductName</h6>
                                                     <small class="text-muted">Product ID: @item.ProductId</small>
+                                                    @if (isOutOfStock)
+                                                    {
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-danger">Out of Stock</span>
+                                                        </div>
+                                                    }
+                                                    else if (isLowStock)
+                                                    {
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-warning text-dark">Low Stock</span>
+                                                        </div>
+                                                    }
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            <span class="badge @(item.IsRental ? "bg-warning" : "bg-success")">
-                                                @(item.IsRental ? "Rental" : "Purchase")
-                                            </span>
+                                        <td class="text-center">
+                                            @if (isOutOfStock)
+                                            {
+                                                <span class="text-danger fw-bold">0</span>
+                                                <input type="hidden" name="quantities[@i].Quantity" value="0" />
+                                                <input type="hidden" name="quantities[@i].ProductId" value="@item.ProductId" />
+                                            }
+                                            else
+                                            {
+                                                <div class="input-group input-group-sm" style="width: 140px;">
+                                                    <button type="button" class="btn btn-outline-secondary quantity-decrease"
+                                                            data-product-id="@item.ProductId"
+                                                            data-max-stock="@maxAllowed">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <input type="number" name="quantities[@i].Quantity"
+                                                           value="@(item.Quantity > maxAllowed ? maxAllowed : item.Quantity)"
+                                                           min="1" max="@maxAllowed"
+                                                           class="form-control text-center quantity-input"
+                                                           data-product-id="@item.ProductId"
+                                                           data-unit-price="@unitPriceString"
+                                                           data-max-stock="@maxAllowed"
+                                                           onchange="validateQuantity(this)" />
+                                                    <input type="hidden" name="quantities[@i].ProductId" value="@item.ProductId" />
+                                                    <button type="button" class="btn btn-outline-secondary quantity-increase"
+                                                            data-product-id="@item.ProductId"
+                                                            data-max-stock="@maxAllowed">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            }
                                         </td>
                                         <td class="text-center">
-                                            <div class="input-group input-group-sm" style="width: 120px;">
-                                                <button type="button" class="btn btn-outline-secondary quantity-decrease"
-                                                        data-product-id="@item.ProductId"
-                                                        data-is-rental="@item.IsRental">
-                                                    <i class="fas fa-minus"></i>
-                                                </button>
-                                                <input type="number" name="quantities[@i].Quantity"
-                                                       value="@item.Quantity"
-                                                       min="1" max="10"
-                                                       class="form-control text-center quantity-input"
-                                                       data-product-id="@item.ProductId"
-                                                       data-is-rental="@item.IsRental"
-                                                       data-unit-price="@(item.IsRental ? item.RentalFee : item.Price)" />
-                                                <input type="hidden" name="quantities[@i].ProductId" value="@item.ProductId" />
-                                                <input type="hidden" name="quantities[@i].IsRental" value="@item.IsRental.ToString().ToLower()" />
-                                                <button type="button" class="btn btn-outline-secondary quantity-increase"
-                                                        data-product-id="@item.ProductId"
-                                                        data-is-rental="@item.IsRental">
-                                                    <i class="fas fa-plus"></i>
-                                                </button>
-                                            </div>
+                                            @if (isOutOfStock)
+                                            {
+                                                <span class="text-danger fw-bold">0</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="@(isLowStock ? "text-warning fw-bold" : "text-success")">
+                                                    @availableStock in stock
+                                                </span>
+                                            }
                                         </td>
                                         <td class="text-end">
-                                            R @(item.IsRental ? item.RentalFee.ToString("N2") : item.Price.ToString("N2"))
+                                            R @(unitPrice.ToString("N2"))
                                         </td>
                                         <td class="text-end fw-bold item-total"
-                                            data-product-id="@item.ProductId"
-                                            data-is-rental="@item.IsRental">
-                                            R @(item.IsRental ? (item.RentalFee * item.Quantity).ToString("N2") : (item.Price * item.Quantity).ToString("N2"))
+                                            data-product-id="@item.ProductId">
+                                            R @(itemTotal.ToString("N2"))
                                         </td>
                                         <td class="text-end">
-                                            @Html.ActionLink("Remove", "RemoveFromCart", new { productId = item.ProductId, isRental = item.IsRental },
+                                            @Html.ActionLink("Remove", "RemoveFromCart", new { productId = item.ProductId },
                                                 new { @class = "btn btn-sm btn-outline-danger", onclick = "return confirm('Are you sure you want to remove this item?')" })
                                         </td>
                                     </tr>
@@ -126,7 +178,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-outline-primary" onclick="setActionType('update')">
+                                <button type="submit" class="btn btn-outline-primary" onclick="setActionType('update')" id="update-cart-btn">
                                     <i class="fas fa-sync-alt me-1"></i> Update Cart
                                 </button>
                                 <button type="submit" class="btn btn-outline-secondary" onclick="setActionType('continue')">
@@ -136,9 +188,33 @@
                         </div>
                         <div class="col-md-6 text-md-end">
                             <div class="mb-2">
-                                <strong>Subtotal: R <span id="cart-subtotal">@Model.Sum(item => item.IsRental ? item.RentalFee * item.Quantity : item.Price * item.Quantity).ToString("N2")</span></strong>
+                                <strong>
+                                    Subtotal: R <span id="cart-subtotal">@initialSubtotal.ToString("N2")</span>
+                                </strong>
                             </div>
-                            @Html.ActionLink("Proceed to Checkout", "Checkout", "Cart", null, new { @class = "btn btn-primary" })
+                            @{
+                                bool hasOutOfStockItems = Model.Any(item => stockDictionary.ContainsKey(item.ProductId) && stockDictionary[item.ProductId] == 0);
+                                bool hasValidItems = Model.Any(item => stockDictionary.ContainsKey(item.ProductId) && stockDictionary[item.ProductId] > 0);
+                            }
+
+                            @if (hasValidItems && !hasOutOfStockItems)
+                            {
+                                @Html.ActionLink("Proceed to Checkout", "Checkout", "Cart", null, new { @class = "btn btn-primary" })
+                            }
+                            else if (hasValidItems)
+                            {
+                                <div class="alert alert-warning p-2 mb-2">
+                                    <small><i class="fas fa-exclamation-triangle me-1"></i> Remove out-of-stock items to checkout</small>
+                                </div>
+                                @Html.ActionLink("Proceed to Checkout", "Checkout", "Cart", null, new { @class = "btn btn-primary disabled", @disabled = "disabled" })
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary" disabled>Proceed to Checkout</button>
+                                <div class="alert alert-danger p-2 mt-2">
+                                    <small><i class="fas fa-times-circle me-1"></i> No items available for checkout</small>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -156,6 +232,39 @@
             @Html.ActionLink("Browse Products", "Browse", "Customer", null, new { @class = "btn btn-primary mt-2" })
         </div>
     }
+
+    @if (Model.Any())
+    {
+        <div class="mt-4">
+            <h4>Order Summary</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th class="text-start">Subtotal</th>
+                            <td class="text-end">R <span id="order-subtotal">@initialSubtotal.ToString("N2")</span></td>
+                        </tr>
+                        @* Discounts and fees can be added here if needed *@
+                        <tr class="table-primary">
+                            <th class="text-start">Estimated Total</th>
+                            <td class="text-end">
+                                R <span id="order-total">@initialSubtotal.ToString("N2")</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form asp-controller="Cart" asp-action="Checkout" method="post" class="mt-4">
+            @Html.AntiForgeryToken()
+            <!-- Replace problematic serialization call with Json.Encode (available in System.Web.Helpers) -->
+            <input type="hidden" name="cartItems" id="cartItems" value="@(Html.Raw(Json.Encode(Model)))" />
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-check-circle me-2"></i> Proceed to Checkout
+            </button>
+        </form>
+    }
 </div>
 
 @section Scripts {
@@ -164,73 +273,173 @@
             document.getElementById('actionType').value = type;
         }
 
+        function validateQuantity(input) {
+            const productId = $(input).data('product-id');
+            const maxStock = parseInt($(input).data('max-stock'));
+            let quantity = parseInt(input.value);
+
+            if (isNaN(quantity) || quantity < 1) {
+                input.value = 1;
+                quantity = 1;
+            } else if (quantity > maxStock) {
+                input.value = maxStock;
+                quantity = maxStock;
+                showStockWarning(productId, maxStock);
+            }
+
+            updateItemTotal(productId, quantity);
+        }
+
+        function showStockWarning(productId, maxStock) {
+            // Remove existing warnings for this product
+            $(`.stock-warning[data-product-id="${productId}"]`).remove();
+
+            const warningHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show mt-2 stock-warning" data-product-id="${productId}" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Maximum available quantity is ${maxStock} due to stock limitations.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+
+            $(`tr[data-product-id="${productId}"]`).after(warningHtml);
+
+            // Auto-remove warning after 5 seconds
+            setTimeout(() => {
+                $(`.stock-warning[data-product-id="${productId}"]`).alert('close');
+            }, 5000);
+        }
+
         $(document).ready(function () {
+            // Initialize stock warnings for items that exceed available stock
+            $('.quantity-input').each(function () {
+                const currentQuantity = parseInt($(this).val());
+                const maxStock = parseInt($(this).data('max-stock'));
+                const productId = $(this).data('product-id');
+
+                if (currentQuantity > maxStock) {
+                    $(this).val(maxStock);
+                    showStockWarning(productId, maxStock);
+                    updateItemTotal(productId, maxStock);
+                }
+            });
+
             // Function to update item total
-            function updateItemTotal(productId, isRental, quantity) {
-                const unitPrice = parseFloat($(`.quantity-input[data-product-id="${productId}"][data-is-rental="${isRental}"]`).data('unit-price'));
+            function updateItemTotal(productId, quantity) {
+                const unitPrice = parseFloat($(`.quantity-input[data-product-id="${productId}"]`).data('unit-price'));
                 const total = unitPrice * quantity;
-                $(`.item-total[data-product-id="${productId}"][data-is-rental="${isRental}"]`).text('R ' + total.toFixed(2));
+                $(`.item-total[data-product-id="${productId}"]`).text('R ' + total.toFixed(2));
                 updateCartTotal();
             }
 
             // Function to update cart total
             function updateCartTotal() {
                 let subtotal = 0;
+
                 $('.item-total').each(function () {
-                    const totalText = $(this).text().replace('R ', '');
-                    subtotal += parseFloat(totalText);
+                    const totalText = $(this).text().replace('R ', '').trim();
+                    const rowTotal = parseFloat(totalText) || 0;
+                    subtotal += rowTotal;
                 });
+
                 $('#cart-subtotal').text(subtotal.toFixed(2));
+                $('#order-subtotal').text(subtotal.toFixed(2));
+                $('#order-total').text(subtotal.toFixed(2));
             }
 
-            // Increase quantity
+            // Increase quantity with stock validation
             $('.quantity-increase').click(function () {
                 const productId = $(this).data('product-id');
-                const isRental = $(this).data('is-rental');
-                const input = $(`.quantity-input[data-product-id="${productId}"][data-is-rental="${isRental}"]`);
+                const maxStock = parseInt($(this).data('max-stock'));
+                const input = $(`.quantity-input[data-product-id="${productId}"]`);
                 let quantity = parseInt(input.val());
 
-                if (quantity < 10) {
+                if (quantity < maxStock) {
                     quantity++;
                     input.val(quantity);
-                    updateItemTotal(productId, isRental, quantity);
+                    updateItemTotal(productId, quantity);
+                } else {
+                    showStockWarning(productId, maxStock);
                 }
             });
 
             // Decrease quantity
             $('.quantity-decrease').click(function () {
                 const productId = $(this).data('product-id');
-                const isRental = $(this).data('is-rental');
-                const input = $(`.quantity-input[data-product-id="${productId}"][data-is-rental="${isRental}"]`);
+                const input = $(`.quantity-input[data-product-id="${productId}"]`);
                 let quantity = parseInt(input.val());
 
                 if (quantity > 1) {
                     quantity--;
                     input.val(quantity);
-                    updateItemTotal(productId, isRental, quantity);
+                    updateItemTotal(productId, quantity);
                 }
             });
 
-            // Manual input change
+            // Manual input change with validation
             $('.quantity-input').on('input', function () {
                 const productId = $(this).data('product-id');
-                const isRental = $(this).data('is-rental');
+                const maxStock = parseInt($(this).data('max-stock'));
                 let quantity = parseInt($(this).val());
 
                 if (isNaN(quantity) || quantity < 1) {
                     quantity = 1;
                     $(this).val(1);
-                } else if (quantity > 10) {
-                    quantity = 10;
-                    $(this).val(10);
+                } else if (quantity > maxStock) {
+                    quantity = maxStock;
+                    $(this).val(maxStock);
+                    showStockWarning(productId, maxStock);
                 }
 
-                updateItemTotal(productId, isRental, quantity);
+                updateItemTotal(productId, quantity);
             });
+
+            // Prevent form submission if any items exceed stock
+            $('#cart-form').on('submit', function (e) {
+                let hasStockIssues = false;
+                let stockIssues = [];
+
+                $('.quantity-input').each(function () {
+                    const productId = $(this).data('product-id');
+                    const quantity = parseInt($(this).val());
+                    const maxStock = parseInt($(this).data('max-stock'));
+                    const productName = $(this).closest('tr').find('h6').text().trim();
+
+                    if (quantity > maxStock) {
+                        hasStockIssues = true;
+                        stockIssues.push(`${productName}: requested ${quantity}, available ${maxStock}`);
+                    }
+                });
+
+                if (hasStockIssues) {
+                    e.preventDefault();
+                    alert('Some items in your cart exceed available stock:\n\n' + stockIssues.join('\n'));
+                    return false;
+                }
+            });
+
+            // Initial subtotal calculation on page load
+            updateCartTotal();
         });
     </script>
 }
 
 <style>
-    /* Your existing styles */
+    .quantity-input:invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .table-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .table-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .stock-warning {
+        font-size: 0.875rem;
+        margin-bottom: 0;
+    }
 </style>

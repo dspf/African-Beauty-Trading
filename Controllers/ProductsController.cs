@@ -23,42 +23,67 @@ namespace African_Beauty_Trading.Controllers
     public class ProductsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
+
         public static class SizeHelper
         {
             public static Dictionary<string, string> GetAdultSizeChart()
             {
                 return new Dictionary<string, string>
-        {
-            {"XS", "Chest: 32-34\", Waist: 26-28\""},
-            {"S", "Chest: 35-37\", Waist: 29-31\""},
-            // Add other sizes
-        };
+            {
+                {"XS", "Chest: 32-34\", Waist: 26-28\""},
+                {"S", "Chest: 35-37\", Waist: 29-31\""},
+                {"M", "Chest: 38-40\", Waist: 32-34\""},
+                {"L", "Chest: 41-43\", Waist: 35-37\""},
+                {"XL", "Chest: 44-46\", Waist: 38-40\""},
+                {"XXL", "Chest: 47-49\", Waist: 41-43\""},
+                {"XXXL", "Chest: 50-52\", Waist: 44-46\""}
+            };
             }
 
             public static Dictionary<string, string> GetKidsSizeChart()
             {
                 return new Dictionary<string, string>
-        {
-            {"0-6 months", "Height: 24-27\", Weight: 12-17 lbs"},
-            {"6-12 months", "Height: 27-30\", Weight: 17-22 lbs"},
-            // Add other age groups
-        };
+            {
+                {"0-6 months", "Height: 24-27\", Weight: 12-17 lbs"},
+                {"6-12 months", "Height: 27-30\", Weight: 17-22 lbs"},
+                {"1-2 years", "Height: 30-34\", Weight: 22-28 lbs"},
+                {"2-4 years", "Height: 34-40\", Weight: 28-36 lbs"},
+                {"4-6 years", "Height: 40-45\", Weight: 36-46 lbs"},
+                {"6-8 years", "Height: 45-50\", Weight: 46-56 lbs"},
+                {"8-10 years", "Height: 50-55\", Weight: 56-68 lbs"},
+                {"10-12 years", "Height: 55-60\", Weight: 68-82 lbs"},
+                {"12+ years", "Height: 60+\", Weight: 82+ lbs"}
+            };
+            }
+
+            public static List<string> GetAllSizes()
+            {
+                var sizes = new List<string>();
+
+                // Adult sizes
+                sizes.AddRange(GetAdultSizeChart().Keys);
+
+                // Kids sizes  
+                sizes.AddRange(GetKidsSizeChart().Keys);
+
+                // Additional common sizes
+                sizes.AddRange(new List<string>
+            {
+                "One Size", "28", "30", "32", "34", "36", "38", "40",
+                "42", "44", "46", "48", "50", "52", "54"
+            });
+
+                return sizes.Distinct().OrderBy(s => s).ToList();
             }
         }
 
         // GET: Products
-        public ActionResult Index(string genderFilter = "", string categoryFilter = "", string sizeFilter = "", string searchString = "")
+        public ActionResult Index(string categoryFilter = "", string sizeFilter = "", string searchString = "")
         {
             IQueryable<Product> products = db.Products
-                .Include(p => p.Category)
-                .Include(p => p.Department);
+                .Include(p => p.Category);
 
             // Apply filters if specified
-            if (!string.IsNullOrEmpty(genderFilter))
-            {
-                products = products.Where(p => p.Department.Name == genderFilter);
-            }
-
             if (!string.IsNullOrEmpty(categoryFilter))
             {
                 products = products.Where(p => p.Category.Name == categoryFilter);
@@ -66,27 +91,18 @@ namespace African_Beauty_Trading.Controllers
 
             if (!string.IsNullOrEmpty(sizeFilter))
             {
-                products = products.Where(p => p.Size == sizeFilter || p.AgeGroup == sizeFilter);
+                products = products.Where(p => p.AvailableSizes.Contains(sizeFilter));
             }
 
             if (!string.IsNullOrEmpty(searchString))
             {
                 products = products.Where(p => p.Name.Contains(searchString) ||
-                                           p.Description.Contains(searchString) ||
-                                           p.EthnicGroup.Contains(searchString) ||
-                                           p.Occasion.Contains(searchString));
+                                           p.Description.Contains(searchString));
             }
 
             // Populate filter dropdowns
-            ViewBag.GenderFilters = new SelectList(db.Departments, "Name", "Name", genderFilter);
             ViewBag.CategoryFilters = new SelectList(db.Categories, "Name", "Name", categoryFilter);
-
-            // Combine size options for adults and kids
-            var sizeOptions = GetSizeOptions().Select(s => s.Value).ToList();
-            sizeOptions.AddRange(GetAgeGroupOptions().Select(a => a.Value));
-            ViewBag.SizeFilters = new SelectList(sizeOptions.Distinct(), sizeFilter);
-
-            ViewBag.CurrentGenderFilter = genderFilter;
+            ViewBag.SizeFilters = new SelectList(SizeHelper.GetAllSizes(), sizeFilter);
             ViewBag.CurrentCategoryFilter = categoryFilter;
             ViewBag.CurrentSizeFilter = sizeFilter;
             ViewBag.CurrentSearchString = searchString;
@@ -103,32 +119,30 @@ namespace African_Beauty_Trading.Controllers
             }
             Product product = db.Products
                 .Include(p => p.Category)
-                .Include(p => p.Department)
                 .FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
                 return HttpNotFound();
             }
+
+            ViewBag.AvailableSizes = product.AvailableSizes?.Split(',').ToList() ?? new List<string>();
             return View(product);
         }
 
-        // GET: Products/Create
         // GET: Products/Create
         public ActionResult Create()
         {
             // Initialize new product with default values
             var product = new Product
             {
-                DateCreated = DateTime.Now,
-                LastUpdated = DateTime.Now,
-                IsActive = true
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Featured = false
             };
 
-            // Populate ViewBag with dropdown options
+            // Populate dropdowns
             ViewBag.CategoryId = new SelectList(db.Categories, "Id", "Name");
-            ViewBag.DepartmentId = new SelectList(db.Departments, "Id", "Name");
-            ViewBag.Sizes = new SelectList(GetSizeOptions(), "Value", "Text");
-            ViewBag.AgeGroups = new SelectList(GetAgeGroupOptions(), "Value", "Text");
+            ViewBag.AllSizes = SizeHelper.GetAllSizes();
 
             return View(product);
         }
@@ -136,59 +150,24 @@ namespace African_Beauty_Trading.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(Product product, HttpPostedFileBase ImageFile)
+        public ActionResult Create(Product product, HttpPostedFileBase ImageFile, List<string> SelectedSizes)
         {
             // Debug: Log the received data
             System.Diagnostics.Debug.WriteLine($"Product Name: {product.Name}");
             System.Diagnostics.Debug.WriteLine($"CategoryId: {product.CategoryId}");
-            System.Diagnostics.Debug.WriteLine($"DepartmentId: {product.DepartmentId}");
-            System.Diagnostics.Debug.WriteLine($"ProductType: {product.ProductType}");
-            
-            // Custom validation based on ProductType
-            if (string.IsNullOrEmpty(product.ProductType))
+            System.Diagnostics.Debug.WriteLine($"Price: {product.Price}");
+            System.Diagnostics.Debug.WriteLine($"Selected Sizes: {string.Join(", ", SelectedSizes ?? new List<string>())}");
+
+            // Process selected sizes
+            if (SelectedSizes != null && SelectedSizes.Any())
             {
-                ModelState.AddModelError("ProductType", "Please select a product type.");
+                product.AvailableSizes = string.Join(",", SelectedSizes);
             }
             else
             {
-                if (product.ProductType == "Buy" || product.ProductType == "Both")
-                {
-                    if (product.Price <= 0)
-                    {
-                        ModelState.AddModelError("Price", "Price is required for products available for purchase.");
-                    }
-                }
-                if (product.ProductType == "Rent" || product.ProductType == "Both")
-                {
-                    if (product.RentalFee <= 0)
-                    {
-                        ModelState.AddModelError("RentalFee", "Rental fee is required for products available for rent.");
-                    }
-                }
-                
-                // Set unused price fields to 0 based on ProductType
-                if (product.ProductType == "Buy")
-                {
-                    product.RentalFee = 0;
-                }
-                else if (product.ProductType == "Rent")
-                {
-                    product.Price = 0;
-                }
+                product.AvailableSizes = "One Size"; // Default if no sizes selected
             }
-            
-            // Debug: Log ModelState errors
-            if (!ModelState.IsValid)
-            {
-                foreach (var modelError in ModelState)
-                {
-                    foreach (var error in modelError.Value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Validation Error - {modelError.Key}: {error.ErrorMessage}");
-                    }
-                }
-            }
-            
+
             if (ModelState.IsValid)
             {
                 // Handle image upload
@@ -205,27 +184,26 @@ namespace African_Beauty_Trading.Controllers
                     }
 
                     ImageFile.SaveAs(path);
-                    product.ImagePath = "/Uploads/" + fileName;
+                    product.ImageUrl = "/Uploads/" + fileName;
                 }
 
                 // Set additional properties
-                product.DateCreated = DateTime.Now;
-                product.LastUpdated = DateTime.Now;
+                product.CreatedAt = DateTime.Now;
+                product.UpdatedAt = DateTime.Now;
 
                 db.Products.Add(product);
                 db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Product created successfully!";
                 return RedirectToAction("Index");
             }
 
             // If we got this far, something failed; redisplay form
-            // Repopulate dropdowns
             ViewBag.CategoryId = new SelectList(db.Categories, "Id", "Name", product.CategoryId);
-            ViewBag.DepartmentId = new SelectList(db.Departments, "Id", "Name", product.DepartmentId);
-            ViewBag.Sizes = new SelectList(GetSizeOptions(), "Value", "Text", product.Size);
-            ViewBag.AgeGroups = new SelectList(GetAgeGroupOptions(), "Value", "Text", product.AgeGroup);
-
+            ViewBag.AllSizes = SizeHelper.GetAllSizes();
             return View(product);
         }
+
         // GET: Products/Edit/5
         public ActionResult Edit(int? id)
         {
@@ -241,9 +219,8 @@ namespace African_Beauty_Trading.Controllers
 
             // Populate ViewBag with dropdown options
             ViewBag.CategoryId = new SelectList(db.Categories, "Id", "Name", product.CategoryId);
-            ViewBag.DepartmentId = new SelectList(db.Departments, "Id", "Name", product.DepartmentId);
-            ViewBag.Sizes = new SelectList(GetSizeOptions(), "Value", "Text", product.Size);
-            ViewBag.AgeGroups = new SelectList(GetAgeGroupOptions(), "Value", "Text", product.AgeGroup);
+            ViewBag.AllSizes = SizeHelper.GetAllSizes();
+            ViewBag.SelectedSizes = product.AvailableSizes?.Split(',').ToList() ?? new List<string>();
 
             return View(product);
         }
@@ -251,50 +228,27 @@ namespace African_Beauty_Trading.Controllers
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Product product, HttpPostedFileBase ImageFile)
+        public ActionResult Edit(Product product, HttpPostedFileBase ImageFile, List<string> SelectedSizes)
         {
-            // Custom validation based on ProductType
-            if (string.IsNullOrEmpty(product.ProductType))
+            // Process selected sizes
+            if (SelectedSizes != null && SelectedSizes.Any())
             {
-                ModelState.AddModelError("ProductType", "Please select a product type.");
+                product.AvailableSizes = string.Join(",", SelectedSizes);
             }
             else
             {
-                if (product.ProductType == "Buy" || product.ProductType == "Both")
-                {
-                    if (product.Price <= 0)
-                    {
-                        ModelState.AddModelError("Price", "Price is required for products available for purchase.");
-                    }
-                }
-                if (product.ProductType == "Rent" || product.ProductType == "Both")
-                {
-                    if (product.RentalFee <= 0)
-                    {
-                        ModelState.AddModelError("RentalFee", "Rental fee is required for products available for rent.");
-                    }
-                }
-                
-                // Set unused price fields to 0 based on ProductType
-                if (product.ProductType == "Buy")
-                {
-                    product.RentalFee = 0;
-                }
-                else if (product.ProductType == "Rent")
-                {
-                    product.Price = 0;
-                }
+                product.AvailableSizes = "One Size";
             }
-            
+
             if (ModelState.IsValid)
             {
                 // Handle image update
                 if (ImageFile != null && ImageFile.ContentLength > 0)
                 {
                     // Delete old image if exists
-                    if (!string.IsNullOrEmpty(product.ImagePath))
+                    if (!string.IsNullOrEmpty(product.ImageUrl))
                     {
-                        string oldPath = Server.MapPath(product.ImagePath);
+                        string oldPath = Server.MapPath(product.ImageUrl);
                         if (System.IO.File.Exists(oldPath))
                         {
                             System.IO.File.Delete(oldPath);
@@ -308,26 +262,27 @@ namespace African_Beauty_Trading.Controllers
                     string path = Path.Combine(Server.MapPath("~/Uploads/"), fileName);
 
                     ImageFile.SaveAs(path);
-                    product.ImagePath = "/Uploads/" + fileName;
+                    product.ImageUrl = "/Uploads/" + fileName;
                 }
 
                 // Update tracking
-                product.LastUpdated = DateTime.Now;
+                product.UpdatedAt = DateTime.Now;
 
                 db.Entry(product).State = EntityState.Modified;
                 db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Product updated successfully!";
                 return RedirectToAction("Index");
             }
 
             // If we got this far, something failed; redisplay form
             ViewBag.CategoryId = new SelectList(db.Categories, "Id", "Name", product.CategoryId);
-            ViewBag.DepartmentId = new SelectList(db.Departments, "Id", "Name", product.DepartmentId);
-            ViewBag.Sizes = new SelectList(GetSizeOptions(), "Value", "Text", product.Size);
-            ViewBag.AgeGroups = new SelectList(GetAgeGroupOptions(), "Value", "Text", product.AgeGroup);
-
+            ViewBag.AllSizes = SizeHelper.GetAllSizes();
+            ViewBag.SelectedSizes = SelectedSizes;
             return View(product);
         }
 
+        // Rest of your methods remain the same...
         // GET: Products/Delete/5
         public ActionResult Delete(int? id)
         {
@@ -351,9 +306,9 @@ namespace African_Beauty_Trading.Controllers
             Product product = db.Products.Find(id);
 
             // Delete associated image
-            if (!string.IsNullOrEmpty(product.ImagePath))
+            if (!string.IsNullOrEmpty(product.ImageUrl))
             {
-                string path = Server.MapPath(product.ImagePath);
+                string path = Server.MapPath(product.ImageUrl);
                 if (System.IO.File.Exists(path))
                 {
                     System.IO.File.Delete(path);
@@ -362,39 +317,36 @@ namespace African_Beauty_Trading.Controllers
 
             db.Products.Remove(product);
             db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Product deleted successfully!";
             return RedirectToAction("Index");
         }
 
-        // Helper methods for dropdown options
-        private List<SelectListItem> GetSizeOptions()
+        // Toggle featured status
+        [HttpPost]
+        public ActionResult ToggleFeatured(int id)
         {
-            return new List<SelectListItem>
+            var product = db.Products.Find(id);
+            if (product != null)
             {
-                new SelectListItem { Value = "XS", Text = "Extra Small (XS)" },
-                new SelectListItem { Value = "S", Text = "Small (S)" },
-                new SelectListItem { Value = "M", Text = "Medium (M)" },
-                new SelectListItem { Value = "L", Text = "Large (L)" },
-                new SelectListItem { Value = "XL", Text = "Extra Large (XL)" },
-                new SelectListItem { Value = "XXL", Text = "Double Extra Large (XXL)" },
-                new SelectListItem { Value = "XXXL", Text = "Triple Extra Large (XXXL)" },
-                new SelectListItem { Value = "Custom", Text = "Custom Size" }
-            };
+                product.Featured = !product.Featured;
+                product.UpdatedAt = DateTime.Now;
+                db.SaveChanges();
+                return Json(new { success = true, featured = product.Featured });
+            }
+            return Json(new { success = false });
         }
 
-        private List<SelectListItem> GetAgeGroupOptions()
+        // Get featured products
+        public ActionResult Featured()
         {
-            return new List<SelectListItem>
-            {
-                new SelectListItem { Value = "0-6 months", Text = "0-6 months" },
-                new SelectListItem { Value = "6-12 months", Text = "6-12 months" },
-                new SelectListItem { Value = "1-2 years", Text = "1-2 years" },
-                new SelectListItem { Value = "2-4 years", Text = "2-4 years" },
-                new SelectListItem { Value = "4-6 years", Text = "4-6 years" },
-                new SelectListItem { Value = "6-8 years", Text = "6-8 years" },
-                new SelectListItem { Value = "8-10 years", Text = "8-10 years" },
-                new SelectListItem { Value = "10-12 years", Text = "10-12 years" },
-                new SelectListItem { Value = "12+ years", Text = "12+ years" }
-            };
+            var featuredProducts = db.Products
+                .Include(p => p.Category)
+                .Where(p => p.Featured && p.Stock > 0)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+
+            return View(featuredProducts);
         }
 
         protected override void Dispose(bool disposing)

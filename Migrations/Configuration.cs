@@ -1,5 +1,4 @@
-﻿
-namespace African_Beauty_Trading.Migrations
+﻿namespace African_Beauty_Trading.Migrations
 {
     using African_Beauty_Trading.Models;
     using System;
@@ -12,7 +11,7 @@ namespace African_Beauty_Trading.Migrations
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = true;
+            AutomaticMigrationsEnabled = false;
         }
 
         protected override void Seed(African_Beauty_Trading.Models.ApplicationDbContext context)

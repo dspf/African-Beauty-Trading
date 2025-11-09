@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.linux
+    image: africanbeautytrading:local
+    ports:
+      - '8080:80'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - PORT=80
+      - CONNECTION_STRING=${CONNECTION_STRING}
+    depends_on:
+      - db
+    volumes:
+      - ./src/CoreApp/wwwroot:/app/wwwroot:rw
+
+  db:
+    image: timescale/timescaledb:latest-pg13
+    environment:
+      - POSTGRES_USER=tsdbadmin
+      - POSTGRES_PASSWORD=change_me
+      - POSTGRES_DB=defaultdb
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

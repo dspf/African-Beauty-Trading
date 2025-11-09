@@ -1,9 +1,408 @@
-﻿
-@{
-    ViewBag.Title = "PaymentCancel";
+﻿@{
+    ViewBag.Title = "Payment Cancelled";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Payment Cancelled ❌</h2>
-<h2>@ViewBag.Message</h2>
-<p>If this was a mistake, you can try placing your order again.</p>
+<style>
+    .cancel-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cancel-card {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 10;
+        max-width: 500px;
+        width: 90%;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    .cancel-icon {
+        width: 100px;
+        height: 100px;
+        background: #ef4444;
+        border-radius: 50%;
+        margin: 0 auto 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: shake 0.8s ease-in-out;
+        position: relative;
+    }
+
+        .cancel-icon::after {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            opacity: 0.3;
+        }
+
+        .cancel-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+    .cancel-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 1rem;
+        animation: fadeIn 1s ease-in;
+    }
+
+    .message-box {
+        background: #fef2f2;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-left: 4px solid #ef4444;
+        animation: fadeIn 1.2s ease-in;
+    }
+
+    .btn-retry {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+    .btn-outline-cancel {
+        border: 2px solid #6b7280;
+        color: #6b7280;
+        background: transparent;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-outline-cancel:hover {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+        }
+
+    .help-section {
+        text-align: left;
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 2rem 0;
+        border-left: 4px solid #6b7280;
+        animation: fadeIn 1.4s ease-in;
+    }
+
+        .help-section h4 {
+            color: #374151;
+            margin-bottom: 1rem;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-section li {
+            padding: 0.5rem 0;
+            color: #4b5563;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+            .help-section li:before {
+                content: '•';
+                position: absolute;
+                left: 0;
+                color: #ef4444;
+                font-weight: bold;
+                font-size: 1.2rem;
+            }
+
+    .floating-particles {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        animation: floatUp 6s linear infinite;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+
+        10%, 30%, 50%, 70%, 90% {
+            transform: translateX(-5px);
+        }
+
+        20%, 40%, 60%, 80% {
+            transform: translateX(5px);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.1;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes floatUp {
+        0% {
+            transform: translateY(100vh) rotate(0deg);
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 1;
+        }
+
+        90% {
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(-100px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    .reason-list {
+        background: #fffbeb;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-left: 4px solid #f59e0b;
+    }
+
+        .reason-list h5 {
+            color: #d97706;
+            margin-bottom: 0.5rem;
+        }
+
+    .contact-info {
+        background: #eff6ff;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-left: 4px solid #3b82f6;
+    }
+
+        .contact-info h5 {
+            color: #1d4ed8;
+            margin-bottom: 0.5rem;
+        }
+</style>
+
+<div class="cancel-container">
+    <!-- Floating particles -->
+    <div id="particles-container"></div>
+
+    <div class="cancel-card">
+        <div class="cancel-icon">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <h1 class="cancel-text">Payment Cancelled</h1>
+
+        <div class="message-box">
+            <h3 style="color: #dc2626; margin-bottom: 1rem;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @if (!string.IsNullOrEmpty(ViewBag.Message))
+                {
+                    @ViewBag.Message
+                }
+                else
+                {
+                    <text>Your payment was cancelled</text>
+                }
+            </h3>
+            <p style="color: #7f1d1d; margin: 0;">
+                Don't worry - your cart items have been saved. You can try again whenever you're ready.
+            </p>
+        </div>
+
+        <div class="reason-list">
+            <h5><i class="fas fa-lightbulb me-2"></i>Common Reasons:</h5>
+            <ul style="color: #92400e; margin: 0; padding-left: 1rem;">
+                <li>Changed your mind</li>
+                <li>Payment method issues</li>
+                <li>Need more time to decide</li>
+                <li>Technical difficulties</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h4><i class="fas fa-life-ring me-2"></i>Need Help?</h4>
+            <ul>
+                <li>Check your payment method details</li>
+                <li>Ensure you have sufficient funds</li>
+                <li>Try using a different payment method</li>
+                <li>Contact support if issues persist</li>
+            </ul>
+        </div>
+
+        <div class="contact-info">
+            <h5><i class="fas fa-headset me-2"></i>Support Contact</h5>
+            <p style="color: #1e40af; margin: 0;">
+                Email: support@africanbeauty.com<br>
+                Phone: +27 11 123 4567
+            </p>
+        </div>
+
+        <div class="action-buttons" style="margin-top: 2rem;">
+            <a href="@Url.Action("Checkout", "Cart")" class="btn-retry">
+                <i class="fas fa-redo me-2"></i>Try Payment Again
+            </a>
+            <a href="@Url.Action("Index", "Cart")" class="btn-outline-cancel">
+                <i class="fas fa-shopping-cart me-2"></i>Back to Cart
+            </a>
+            <a href="@Url.Action("Browse", "Customer")" class="btn-outline-cancel">
+                <i class="fas fa-store me-2"></i>Continue Shopping
+            </a>
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+            <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                Your cart items will be saved for 24 hours
+            </small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'floating-particles';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.width = Math.random() * 6 + 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = `rgba(255, 255, 255, ${Math.random() * 0.3 + 0.2})`;
+                container.appendChild(particle);
+            }
+        }
+
+        // Add page load effects
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+
+            // Add intermittent shake to cancel icon
+            setInterval(() => {
+                const icon = document.querySelector('.cancel-icon');
+                icon.style.animation = 'none';
+                setTimeout(() => {
+                    icon.style.animation = 'shake 0.8s ease-in-out';
+                }, 10);
+            }, 8000);
+        });
+
+        // Add smooth hover effects
+        const buttons = document.querySelectorAll('.btn-retry, .btn-outline-cancel');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px) scale(1.05)';
+            });
+
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add typing effect to message
+        function typeWriter(element, text, speed = 50) {
+            let i = 0;
+            element.innerHTML = '';
+
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // Apply typing effect to custom messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageElement = document.querySelector('.message-box h3');
+            if (messageElement && !messageElement.innerHTML.includes('@ViewBag.Message')) {
+                const originalText = messageElement.innerHTML;
+                messageElement.style.minHeight = '3em';
+                typeWriter(messageElement, originalText, 30);
+            }
+        });
+    </script>
+}

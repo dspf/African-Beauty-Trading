@@ -1,5 +1,6 @@
 ﻿@using African_Beauty_Trading.Models
 @model LoginViewModel
+@using System.Security.Claims
 @{
     ViewBag.Title = "Log in";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -14,51 +15,62 @@
                     <p class="text-muted mb-0">Sign in to your account</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
-                    {
+                    <form asp-controller="Account" asp-action="Login" method="post">
                         @Html.AntiForgeryToken()
-
                         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
-                        <div class="form-group mb-4">
-                            @Html.LabelFor(m => m.Email, new { @class = "form-label" })
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Enter your email" })
+                        @if (Model != null)
+                        {
+                            <div class="form-group mb-4">
+                                @Html.LabelFor(m => m.Email, new { @class = "form-label" })
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Enter your email" })
+                                </div>
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small mt-1" })
                             </div>
-                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small mt-1" })
-                        </div>
 
-                        <div class="form-group mb-4">
-                            @Html.LabelFor(m => m.Password, new { @class = "form-label" })
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password" })
+                            <div class="form-group mb-4">
+                                @Html.LabelFor(m => m.Password, new { @class = "form-label" })
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password" })
+                                </div>
+                                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small mt-1" })
                             </div>
-                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small mt-1" })
-                        </div>
 
-                        <div class="form-group form-check mb-4">
-                            @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
-                            @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label" })
-                        </div>
+                            <div class="form-group form-check mb-4">
+                                @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                                @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label" })
+                            </div>
 
-                        <div class="form-group mb-4">
-                            <button type="submit" class="btn btn-primary w-100 py-2">
-                                <i class="fas fa-sign-in-alt me-2"></i>Log in
-                            </button>
-                        </div>
+                            <div class="form-group mb-4">
+                                <button type="submit" class="btn btn-primary w-100 py-2">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Log in
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- SHOW MAINTENANCE MESSAGE WHEN MODEL IS NULL -->
+                            <div class="alert alert-warning text-center">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                                <h5 class="alert-heading">System Maintenance</h5>
+                                <p class="mb-0">We're currently performing system maintenance. Please try again in a few minutes.</p>
+                            </div>
+                            <div class="form-group mb-4">
+                                <button type="button" class="btn btn-secondary w-100 py-2" disabled>
+                                    <i class="fas fa-clock me-2"></i>Sign In Temporarily Unavailable
+                                </button>
+                            </div>
+                        }
 
                         <div class="text-center">
                             <p class="mb-2">
                                 @Html.ActionLink("Register as a new user", "Register", null, new { @class = "text-decoration-none" })
                             </p>
-                            @* Enable this once you have account confirmation enabled for password reset functionality
-                                <p>
-                                    @Html.ActionLink("Forgot your password?", "ForgotPassword", null, new { @class = "text-decoration-none" })
-                                </p>*@
                         </div>
-                    }
+                    </form>
                 </div>
 
                 <div class="card-footer text-center py-3">
@@ -156,5 +168,7 @@
 </style>
 
 @section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y3Yp3b7m1Q6QmS2m3p3Z0hv5d2w5KkN6Nk=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js" integrity="sha512-bmXU8n6d2q5r2P1+d7eRr6A5tg8Z0R1qY8Qx5yq6vV2x8Z5y1V6Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js" integrity="sha512-1eY1aQ+8yFJ2ZsZqvU5Yw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 }

@@ -16,14 +16,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using System.Globalization;
 
 namespace African_Beauty_Trading.Controllers
 {
+
     [Authorize(Roles = "Customer")]
     public class CartController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
-        private string deliveryAddress;
 
         // View Cart
         public ActionResult Index()
@@ -47,8 +48,7 @@ namespace African_Beauty_Trading.Controllers
                     foreach (var quantityUpdate in quantities)
                     {
                         var cartItem = cart.FirstOrDefault(item =>
-                            item.ProductId == quantityUpdate.ProductId &&
-                            item.IsRental == quantityUpdate.IsRental);
+                            item.ProductId == quantityUpdate.ProductId);
 
                         if (cartItem != null)
                         {
@@ -62,7 +62,7 @@ namespace African_Beauty_Trading.Controllers
 
                             // Validate requested quantity against available stock
                             int requestedQuantity = Math.Max(1, quantityUpdate.Quantity);
-                            
+
                             if (requestedQuantity > product.Stock)
                             {
                                 // Set to maximum available stock
@@ -108,7 +108,6 @@ namespace African_Beauty_Trading.Controllers
         public class CartQuantityUpdate
         {
             public int ProductId { get; set; }
-            public bool IsRental { get; set; }
             public int Quantity { get; set; }
         }
 
@@ -123,10 +122,10 @@ namespace African_Beauty_Trading.Controllers
 
         // Add to Cart with Stock Validation
         [HttpPost]
-        public ActionResult AddToCart(int productId, bool isRental, int quantity = 1)
+        public ActionResult AddToCart(int productId, int quantity = 1)
         {
             var product = db.Products.Find(productId);
-            if (product == null) 
+            if (product == null)
             {
                 TempData["ErrorMessage"] = "Product not found";
                 return RedirectToAction("Index");
@@ -142,7 +141,7 @@ namespace African_Beauty_Trading.Controllers
             var cart = Session["Cart"] as List<CartItem> ?? new List<CartItem>();
 
             // Calculate total quantity that would be in cart after adding
-            var existing = cart.FirstOrDefault(c => c.ProductId == productId && c.IsRental == isRental);
+            var existing = cart.FirstOrDefault(c => c.ProductId == productId);
             int totalQuantityInCart = existing?.Quantity ?? 0;
             int requestedTotalQuantity = totalQuantityInCart + quantity;
 
@@ -171,9 +170,7 @@ namespace African_Beauty_Trading.Controllers
                     ProductId = product.Id,
                     ProductName = product.Name,
                     Price = product.Price,
-                    RentalFee = product.RentalFee,
-                    Quantity = quantity,
-                    IsRental = isRental
+                    Quantity = quantity
                 });
             }
 
@@ -183,12 +180,12 @@ namespace African_Beauty_Trading.Controllers
         }
 
         // Remove from Cart
-        public ActionResult RemoveFromCart(int productId, bool isRental)
+        public ActionResult RemoveFromCart(int productId)
         {
             var cart = Session["Cart"] as List<CartItem>;
             if (cart != null)
             {
-                var item = cart.FirstOrDefault(c => c.ProductId == productId && c.IsRental == isRental);
+                var item = cart.FirstOrDefault(c => c.ProductId == productId);
                 if (item != null)
                     cart.Remove(item);
 
@@ -205,341 +202,197 @@ namespace African_Beauty_Trading.Controllers
             if (cart == null || !cart.Any())
                 return RedirectToAction("Index");
 
-            ViewBag.OrderType = cart.Any(c => c.IsRental) ? "Rent" : "Buy";
-
             return View();
         }
 
         // POST: Checkout with Stock Validation
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Checkout(Order model, string Priority)
+        public ActionResult Checkout(string address, string city, string postalCode, string phone, string notes)
         {
-            var cart = Session["Cart"] as List<CartItem>;
-            if (cart == null || !cart.Any())
-                return RedirectToAction("Index");
-
-            // ✅ CRITICAL: Real-time stock validation before processing order
-            var stockValidationErrors = new List<string>();
-            foreach (var cartItem in cart)
-            {
-                var product = db.Products.Find(cartItem.ProductId);
-                if (product == null)
-                {
-                    stockValidationErrors.Add($"Product {cartItem.ProductName} is no longer available.");
-                    continue;
-                }
-
-                if (product.Stock < cartItem.Quantity)
-                {
-                    if (product.Stock == 0)
-                    {
-                        stockValidationErrors.Add($"{cartItem.ProductName} is out of stock.");
-                    }
-                    else
-                    {
-                        stockValidationErrors.Add($"Only {product.Stock} units of {cartItem.ProductName} are available (you have {cartItem.Quantity} in cart).");
-                    }
-                }
-            }
-
-            if (stockValidationErrors.Any())
-            {
-                ModelState.AddModelError("", "Stock validation failed: " + string.Join(" ", stockValidationErrors));
-                TempData["ErrorMessage"] = "Please update your cart - some items are no longer available in the requested quantities.";
-                return View(model);
-            }
-
-            // ✅ VALIDATION: Rental date checks
-            if (cart.Any(c => c.IsRental))
-            {
-                if (!model.RentStartDate.HasValue || !model.RentEndDate.HasValue)
-                {
-                    ModelState.AddModelError("", "Rental start and end dates must be provided.");
-                    return View(model);
-                }
-
-                var days = (model.RentEndDate.Value - model.RentStartDate.Value).Days;
-                if (days < 1) days = 1;
-            }
-
-            // Now create the order and calculate the total
-            var order = new Order
-            {
-                CustomerId = User.Identity.GetUserId(),
-                OrderDate = DateTime.UtcNow,
-                PaymentStatus = "Pending",
-                OrderType = cart.Any(c => c.IsRental) ? "Rent" : "Buy",
-                DeliveryAddress = model.DeliveryAddress,
-                OrderItems = new List<OrderItem>(),
-                RentStartDate = model.RentStartDate,
-                RentEndDate = model.RentEndDate,
-                Priority = !string.IsNullOrEmpty(Priority) ? Priority : "Normal" // Use selected priority or default to Normal
-            };
-
-            decimal total = 0;
-
-            // 🔍 CRITICAL: ADD DETAILED LOGGING TO FIND THE ISSUE
-            System.Diagnostics.Trace.TraceInformation($"=== CART ANALYSIS START ===");
-            System.Diagnostics.Trace.TraceInformation($"Cart has {cart.Count} items");
-
-            foreach (var c in cart)
-            {
-                System.Diagnostics.Trace.TraceInformation($"Processing: {c.ProductName}, Qty: {c.Quantity}, IsRental: {c.IsRental}");
-
-                if (c.IsRental)
-                {
-                    int rentalDays = (model.RentEndDate.Value - model.RentStartDate.Value).Days;
-                    if (rentalDays < 1) rentalDays = 1;
-
-                    // ✅ CONVERT TO RANDS if stored as cents
-                    decimal rentalFeeInRands = c.RentalFee;
-                    decimal depositInRands = c.Deposit ?? 0;
-
-                    // 🔍 LOG THE RAW VALUES
-                    System.Diagnostics.Trace.TraceInformation($"RENTAL - Raw Fee: {c.RentalFee}, Raw Deposit: {c.Deposit}");
-
-                    decimal rentalCost = rentalFeeInRands * c.Quantity * rentalDays;
-                    decimal deposit = depositInRands;
-
-                    System.Diagnostics.Trace.TraceInformation($"RENTAL - Days: {rentalDays}, Fee: {rentalFeeInRands}, Cost: {rentalCost}, Deposit: {deposit}");
-
-                    total += rentalCost + deposit;
-                    System.Diagnostics.Trace.TraceInformation($"Subtotal after rental: {total}");
-
-                    order.OrderItems.Add(new OrderItem
-                    {
-                        ProductId = c.ProductId,
-                        Quantity = c.Quantity,
-                        Price = rentalCost,
-                        IsRental = true,
-                        RentalStartDate = model.RentStartDate,
-                        RentalEndDate = model.RentEndDate,
-                        RentalFeePerDay = rentalFeeInRands,
-                        Deposit = deposit
-                    });
-
-                    // Note: Stock will be reduced in transaction after order creation
-                }
-                else
-                {
-                    // ✅ CONVERT TO RANDS if stored as cents
-                    decimal priceInRands = c.Price;
-
-                    // 🔍 LOG THE RAW VALUE
-                    System.Diagnostics.Trace.TraceInformation($"PURCHASE - Raw Price: {c.Price}");
-
-                    decimal itemTotal = priceInRands * c.Quantity;
-
-                    System.Diagnostics.Trace.TraceInformation($"PURCHASE - Price: {priceInRands}, Qty: {c.Quantity}, Total: {itemTotal}");
-
-                    total += itemTotal;
-                    System.Diagnostics.Trace.TraceInformation($"Subtotal after purchase: {total}");
-
-                    order.OrderItems.Add(new OrderItem
-                    {
-                        ProductId = c.ProductId,
-                        Quantity = c.Quantity,
-                        Price = priceInRands,
-                        IsRental = false
-                    });
-
-                    // Note: Stock will be reduced in transaction after order creation
-                }
-            }
-
-            System.Diagnostics.Trace.TraceInformation($"=== FINAL TOTAL: {total} ===");
-
-            // ✅ CRITICAL: TEMPORARY HARDCODE FOR TESTING
-            // ✅ CRITICAL FIX: Capture the calculated total in a LOCAL VARIABLE immediately
-            decimal finalAmount = total / 100;  // ← ADD THIS DIVISION BY 100
-            System.Diagnostics.Trace.TraceInformation($"1. Calculated Final Amount: {finalAmount}");
-
-            order.TotalPrice = finalAmount;
-            System.Diagnostics.Trace.TraceInformation($"2. Assigned to order.TotalPrice: {order.TotalPrice}");
-            // 📍 Geocode delivery address
             try
             {
-                var coordinates = await GeocodeAddressWithMapbox(order.DeliveryAddress);
-                if (coordinates != null)
+                var cart = Session["Cart"] as List<CartItem> ?? new List<CartItem>();
+                if (!cart.Any())
                 {
-                    order.Latitude = coordinates.Value.Latitude;
-                    order.Longitude = coordinates.Value.Longitude;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.TraceError($"Geocoding failed: {ex.Message}");
-            }
-
-            // SAVE THE ORDER AND REDUCE STOCK IN TRANSACTION
-            using (var transaction = db.Database.BeginTransaction())
-            {
-                try
-                {
-                    db.Orders.Add(order);
-                    db.SaveChanges();
-                    System.Diagnostics.Trace.TraceInformation($"Order {order.Id} saved with TotalPrice: {order.TotalPrice}");
-
-                    // ✅ CRITICAL: Reduce stock for all items in a single transaction
-                    foreach (var cartItem in cart)
-                    {
-                        var product = db.Products.Find(cartItem.ProductId);
-                        if (product != null)
-                        {
-                            // Final stock validation (in case of concurrent orders)
-                            if (product.Stock >= cartItem.Quantity)
-                            {
-                                product.Stock -= cartItem.Quantity;
-                                System.Diagnostics.Trace.TraceInformation($"Reduced stock for Product {cartItem.ProductId} by {cartItem.Quantity}. New stock: {product.Stock}");
-                            }
-                            else
-                            {
-                                // This should not happen due to earlier validation, but handle gracefully
-                                transaction.Rollback();
-                                TempData["ErrorMessage"] = $"Insufficient stock for {product.Name}. Please update your cart.";
-                                return RedirectToAction("Index");
-                            }
-                        }
-                    }
-
-                    db.SaveChanges();
-                    transaction.Commit();
-                    System.Diagnostics.Trace.TraceInformation("Stock reduction completed successfully");
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    System.Diagnostics.Trace.TraceError($"Transaction failed: {ex.Message}");
-                    TempData["ErrorMessage"] = "Order processing failed. Please try again.";
+                    TempData["ErrorMessage"] = "Your cart is empty.";
                     return RedirectToAction("Index");
                 }
-            }
 
-            // 🚚 Create DriverAssignment
-            var assignment = new DriverAssignment
-            {
-                OrderId = order.Id,
-                DriverId = null,
-                Status = "Pending",
-                ExpiryTime = DateTime.UtcNow.AddHours(2),
-                CreatedDate = DateTime.UtcNow
-            };
-            db.DriverAssignments.Add(assignment);
-            db.SaveChanges();
-
-            // 🔗 PayFast redirect
-            string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
-            var payfast = new PayFastService(baseUrl);
-
-            System.Diagnostics.Trace.TraceInformation($"Using amount for PayFast: {finalAmount}");
-
-            string paymentUrl = payfast.GeneratePaymentUrl(
-                order.Id.ToString(),
-                order.OrderType == "Rent" ? "African Heritage Rental" : "African Heritage Order",
-                finalAmount
-            );
-
-            System.Diagnostics.Trace.TraceInformation($"Redirecting to PayFast with URL: {paymentUrl}");
-            return Redirect(paymentUrl);
-        }
-
-
-
-
-        private async Task<(double Latitude, double Longitude)?> GeocodeAddressWithMapbox(string address)
-        {
-            string mapboxKey = ConfigurationManager.AppSettings["Mapbox:AccessToken"];
-
-            if (string.IsNullOrEmpty(mapboxKey) || string.IsNullOrEmpty(address))
-            {
-                System.Diagnostics.Trace.TraceWarning("Mapbox key or address is missing");
-                return null;
-            }
-
-            try
-            {
-                using (var httpClient = new HttpClient())
+                // Create new order
+                var order = new Order
                 {
-                    // URL encode the address
-                    var encodedAddress = Uri.EscapeDataString(address);
+                    CustomerId = User.Identity.GetUserId(),
+                    OrderDate = DateTime.Now,
+                    DeliveryAddress = $"{address}, {city}, {postalCode}",
+                    PaymentStatus = "Pending",
+                    CourierName = "PEP",
+                    CourierStatus = "Awaiting Payment",
+                    Priority = "Normal",
+                    OrderItems = new List<OrderItem>()
+                };
 
-                    // Mapbox Geocoding API URL - optimized for South Africa
-                    var url = $"https://api.mapbox.com/geocoding/v5/mapbox.places/{encodedAddress}.json?access_token={mapboxKey}&country=ZA&limit=1";
+                decimal totalAmount = 0; // Calculate total amount
 
-                    var response = await httpClient.GetAsync(url);
+                System.Diagnostics.Trace.TraceInformation($"=== CART ANALYSIS START ===");
+                System.Diagnostics.Trace.TraceInformation($"Cart has {cart.Count} items");
 
-                    if (!response.IsSuccessStatusCode)
+                foreach (var c in cart)
+                {
+                    System.Diagnostics.Trace.TraceInformation($"Processing: {c.ProductName}, Qty: {c.Quantity}");
+
                     {
-                        System.Diagnostics.Trace.TraceWarning($"Mapbox API returned: {response.StatusCode}");
-                        return null;
-                    }
+                        // ✅ CALCULATE AMOUNT (NO DIVISION)
+                        decimal itemTotal = c.Price * c.Quantity;
 
-                    var content = await response.Content.ReadAsStringAsync();
-                    dynamic result = JsonConvert.DeserializeObject(content);
+                        System.Diagnostics.Trace.TraceInformation($"PURCHASE - Price: {c.Price}, Qty: {c.Quantity}, Total: {itemTotal}");
 
-                    // Check if we have results
-                    if (result.features != null && result.features.Count > 0)
-                    {
-                        var firstFeature = result.features[0];
-                        var coordinates = firstFeature.geometry.coordinates;
+                        totalAmount += itemTotal;
+                        System.Diagnostics.Trace.TraceInformation($"Subtotal after purchase: {totalAmount}");
 
-                        // Mapbox returns [longitude, latitude] order
-                        double longitude = coordinates[0];
-                        double latitude = coordinates[1];
-
-                        return (latitude, longitude);
+                        // Store in database (NO DIVISION)
+                        order.OrderItems.Add(new OrderItem
+                        {
+                            ProductId = c.ProductId,
+                            Quantity = c.Quantity,
+                            Price = itemTotal, // NO DIVISION
+                        });
                     }
                 }
+
+                System.Diagnostics.Trace.TraceInformation($"=== FINAL TOTAL: {totalAmount} ===");
+
+                // ✅ CRITICAL FIX: NO DIVISION - Send the amount as is to PayFast
+                decimal finalAmount = totalAmount; // NO DIVISION BY 100
+                                                   // ✅ Ensure consistent rounding to 2 decimals (away from zero)
+                decimal roundedAmount = Math.Round(finalAmount, 2, MidpointRounding.AwayFromZero);
+                System.Diagnostics.Trace.TraceInformation($"1. Calculated Final Amount: {finalAmount}");
+
+                order.TotalPrice = roundedAmount;
+                System.Diagnostics.Trace.TraceInformation($"2. Assigned to order.TotalPrice: {order.TotalPrice}");
+
+                // SAVE THE ORDER AND REDUCE STOCK IN TRANSACTION
+                using (var transaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        db.Orders.Add(order);
+                        db.SaveChanges();
+                        System.Diagnostics.Trace.TraceInformation($"Order {order.Id} saved with TotalPrice: {order.TotalPrice}");
+
+                        // ✅ CRITICAL: Reduce stock for all items in a single transaction
+                        foreach (var cartItem in cart)
+                        {
+                            var product = db.Products.Find(cartItem.ProductId);
+                            if (product != null)
+                            {
+                                // Final stock validation (in case of concurrent orders)
+                                if (product.Stock >= cartItem.Quantity)
+                                {
+                                    product.Stock -= cartItem.Quantity;
+                                    System.Diagnostics.Trace.TraceInformation($"Reduced stock for Product {cartItem.ProductId} by {cartItem.Quantity}. New stock: {product.Stock}");
+                                }
+                                else
+                                {
+                                    // This should not happen due to earlier validation, but handle gracefully
+                                    transaction.Rollback();
+                                    TempData["ErrorMessage"] = $"Insufficient stock for {product.Name}. Please update your cart.";
+                                    return RedirectToAction("Index");
+                                }
+                            }
+                        }
+
+                        db.SaveChanges();
+                        transaction.Commit();
+                        System.Diagnostics.Trace.TraceInformation("Stock reduction completed successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        System.Diagnostics.Trace.TraceError($"Transaction failed: {ex.Message}");
+                        TempData["ErrorMessage"] = "Order processing failed. Please try again.";
+                        return RedirectToAction("Index");
+                    }
+                }
+
+                // 🔗 PayFast redirect - Send the amount WITHOUT DIVISION
+                string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                var payfast = new PayFastService(baseUrl);
+
+                System.Diagnostics.Trace.TraceInformation($"Using amount for PayFast (rounded): {roundedAmount}");
+
+                string paymentUrl = payfast.GeneratePaymentUrl(
+                    order.Id.ToString(),
+                    "African Heritage Order",
+                    roundedAmount // NO DIVISION - Send 800.00 for R800.00, rounded to 2 decimals
+                );
+
+                System.Diagnostics.Trace.TraceInformation($"Redirecting to PayFast with URL: {paymentUrl}");
+                return Redirect(paymentUrl);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError($"Mapbox geocoding error: {ex.Message}");
+                TempData["ErrorMessage"] = "Checkout error: " + ex.Message;
+                return RedirectToAction("Index");
             }
-
-            return null;
         }
-
-
 
         // After successful payment
         [AllowAnonymous]
-        public ActionResult PaymentSuccess(string orderId)
+        public ActionResult PaymentSuccess(string m_payment_id)
         {
+            System.Diagnostics.Trace.TraceInformation($"=== PAYMENT SUCCESS CALLED ===");
+            System.Diagnostics.Trace.TraceInformation($"m_payment_id: {m_payment_id}");
+
+            // Also check for other possible parameter names
+            string orderId = m_payment_id ?? Request.QueryString["orderId"] ?? Request.QueryString["pf_payment_id"];
+
+            if (string.IsNullOrEmpty(orderId))
+            {
+                ViewBag.Message = "Invalid order reference. Please contact support with your payment details.";
+                return View();
+            }
+
             var order = db.Orders.Find(int.Parse(orderId));
             if (order != null)
             {
-                order.PaymentStatus = "Paid";  // ⚠️ You may later replace this with IPN validation
-                // Priority is already set during checkout, no need to override it here
-                db.SaveChanges();
+                System.Diagnostics.Trace.TraceInformation($"Found Order {order.Id}, Current Status: {order.PaymentStatus}");
 
-                // 🔹 Create driver assignment (unclaimed, pending) - only if one doesn't exist
-                var existingAssignment = db.DriverAssignments.FirstOrDefault(a => a.OrderId == order.Id);
-                if (existingAssignment == null)
+                // CRITICAL: Update payment status immediately regardless of current status
+                if (order.PaymentStatus != "Paid")
                 {
-                    var assignment = new DriverAssignment
-                    {
-                        OrderId = order.Id,
-                        Status = "Pending",
-                        ExpiryTime = DateTime.UtcNow.AddHours(1),
-                        CreatedDate = DateTime.UtcNow,
-                        AssignedDate = DateTime.UtcNow   // ensure not left as MinValue
-                    };
+                    System.Diagnostics.Trace.TraceInformation($"Updating Order {order.Id} from {order.PaymentStatus} to PAID");
 
-                    db.DriverAssignments.Add(assignment);
+                    order.PaymentStatus = "Paid";
+                    order.CourierStatus = "Processing";
+                    order.EstimatedDeliveryDate = DateTime.Now.AddDays(3);
+                    order.ShippedDate = DateTime.Now.AddDays(1);
+                    order.CourierTrackingNumber = "PEP" + order.Id.ToString().PadLeft(8, '0');
+
                     db.SaveChanges();
+                    System.Diagnostics.Trace.TraceInformation($"✅ PAYMENT SUCCESS: Order {order.Id} marked as PAID");
+                }
+                else
+                {
+                    System.Diagnostics.Trace.TraceInformation($"Order {order.Id} is already Paid");
                 }
 
-                // Clear the cart after successful payment
+                // Clear cart
                 Session.Remove("Cart");
                 Session.Remove("OrderId");
+
+                ViewBag.Message = "Payment completed successfully! Your order is being processed.";
+                ViewBag.OrderNumber = order.Id;
+                ViewBag.TrackingNumber = order.CourierTrackingNumber;
+            }
+            else
+            {
+                System.Diagnostics.Trace.TraceError($"❌ Order {orderId} not found in database");
+                ViewBag.Message = "Order not found. Please contact support with your payment reference.";
             }
 
-            ViewBag.Message = "Payment completed successfully!";
             return View();
         }
-
-
         // If user cancels
         [AllowAnonymous]
         public ActionResult PaymentCancel(string orderId)
@@ -556,81 +409,119 @@ namespace African_Beauty_Trading.Controllers
                 }
             }
 
-            ViewBag.Message = "Your payment was cancelled.";
-            return View();
+            TempData["ErrorMessage"] = "Payment was cancelled.";
+            return RedirectToAction("Index");
         }
 
-
-        //PayFast server-to-server notification(IPN)
+        // PayFast server-to-server notification (IPN) - FIXED VERSION
         [HttpPost]
         [AllowAnonymous]
         public ActionResult PaymentNotify()
         {
-            // 1. Read all the data sent by PayFast into a NameValueCollection
-            NameValueCollection incomingData = Request.Form;
+            System.Diagnostics.Trace.TraceInformation("=== 🚀 PAYFAST IPN STARTED ===");
 
-            // 2. Get your passphrase from PayFast dashboard
-            string merchantPassphrase = null; // Change to your actual passphrase if set
-
-            // 3. ✅ MANUAL SIGNATURE VALIDATION
-            bool isValid = ValidatePayFastSignature(incomingData, merchantPassphrase);
-
-            if (!isValid)
+            try
             {
-                System.Diagnostics.Trace.TraceError("ITN request validation FAILED. Potential fraud.");
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-
-            // 4. Extract data from the validated request
-            string orderId = incomingData["m_payment_id"];
-            string paymentStatus = incomingData["payment_status"];
-            // ✅ THE CRITICAL LINE: Get the amount the user actually paid from PayFast's POST data
-            decimal amountPaid = Decimal.Parse(incomingData["amount_gross"]);
-
-            var order = db.Orders.Find(int.Parse(orderId));
-            if (order == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.OK); // Acknowledge receipt even if order not found
-            }
-
-            // 5. ✅ CRITICAL: Verify the amount paid matches the order total in your database
-            if (amountPaid != order.TotalPrice)
-            {
-                System.Diagnostics.Trace.TraceError($"ITN Amount MISMATCH for Order {orderId}. Paid: {amountPaid}, Expected: {order.TotalPrice}.");
-                return new HttpStatusCodeResult(HttpStatusCode.OK);
-            }
-
-            // 6. Process the valid and verified payment
-            if (paymentStatus == "COMPLETE")
-            {
-                order.PaymentStatus = "Paid";
-                db.SaveChanges();
-
-                if (!db.DriverAssignments.Any(a => a.OrderId == order.Id))
+                // Log all incoming data
+                System.Diagnostics.Trace.TraceInformation("=== 📦 INCOMING IPN DATA ===");
+                foreach (string key in Request.Form.AllKeys)
                 {
-                    var assignment = new DriverAssignment
-                    {
-                        OrderId = order.Id,
-                        DriverId = null,
-                        Status = "Pending",
-                        ExpiryTime = DateTime.UtcNow.AddHours(1),
-                        CreatedDate = DateTime.UtcNow
-                    };
-                    db.DriverAssignments.Add(assignment);
-                    db.SaveChanges();
+                    System.Diagnostics.Trace.TraceInformation("  " + key + ": " + Request.Form[key]);
                 }
 
-                // Clear the cart after successful payment
-                Session.Remove("Cart");
-                Session.Remove("OrderId");
-            }
-            else
-            {
-                order.PaymentStatus = paymentStatus;
-                db.SaveChanges();
-            }
+                NameValueCollection incomingData = Request.Form;
 
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
+                // Validate signature
+                string merchantPassphrase = null; // Set this if you have a passphrase
+                bool isValid = ValidatePayFastSignature(incomingData, merchantPassphrase);
+
+                if (!isValid)
+                {
+                    System.Diagnostics.Trace.TraceError("❌ IPN SIGNATURE VALIDATION FAILED");
+                    return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                }
+
+                // Extract data
+                string orderId = incomingData["m_payment_id"];
+                string paymentStatus = incomingData["payment_status"];
+                string pfPaymentId = incomingData["pf_payment_id"];
+                string amountGross = incomingData["amount_gross"];
+
+                System.Diagnostics.Trace.TraceInformation("📋 IPN DATA - Order: " + orderId + ", Status: " + paymentStatus + ", PF ID: " + pfPaymentId + ", Amount: " + amountGross);
+
+                if (string.IsNullOrEmpty(orderId))
+                {
+                    System.Diagnostics.Trace.TraceError("❌ IPN: No order ID received");
+                    return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                }
+
+                // Find and update order
+                var order = db.Orders.Find(int.Parse(orderId));
+                if (order == null)
+                {
+                    System.Diagnostics.Trace.TraceError("❌ IPN: Order " + orderId + " not found in database");
+                    return new HttpStatusCodeResult(HttpStatusCode.OK);
+                }
+
+                System.Diagnostics.Trace.TraceInformation("📊 ORDER FOUND - ID: " + order.Id + ", Current Status: " + order.PaymentStatus + ", Total: " + order.TotalPrice);
+
+                // Process payment
+                if (paymentStatus == "COMPLETE")
+                {
+                    // Verify amount
+                    decimal paidAmount = decimal.Parse(amountGross, CultureInfo.InvariantCulture);
+                    if (paidAmount == order.TotalPrice)
+                    {
+                        order.PaymentStatus = "Paid";
+                        order.CourierStatus = "Processing";
+                        order.EstimatedDeliveryDate = DateTime.Now.AddDays(3);
+                        order.ShippedDate = DateTime.Now.AddDays(1);
+                        order.CourierTrackingNumber = "PEP" + order.Id.ToString().PadLeft(8, '0');
+
+                        db.SaveChanges();
+
+                        Session.Remove("Cart");
+                        Session.Remove("OrderId");
+
+                        System.Diagnostics.Trace.TraceInformation($"✅ IPN SUCCESS: Order {orderId} marked as PAID");
+
+                        // Send email notification (optional)
+                        SendPaymentConfirmation(order);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Trace.TraceError("💰 AMOUNT MISMATCH: Paid " + paidAmount + ", Expected " + order.TotalPrice);
+                    }
+                }
+                else
+                {
+                    order.PaymentStatus = paymentStatus;
+                    db.SaveChanges();
+                    System.Diagnostics.Trace.TraceInformation("ℹ️ IPN: Order " + order.Id + " status: " + paymentStatus);
+                }
+
+                System.Diagnostics.Trace.TraceInformation("=== ✅ PAYFAST IPN COMPLETED ===");
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("💥 IPN ERROR: " + ex.Message);
+                System.Diagnostics.Trace.TraceError("Stack Trace: " + ex.StackTrace);
+                return new HttpStatusCodeResult(HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private void SendPaymentConfirmation(Order order)
+        {
+            try
+            {
+                // Implement email sending logic here
+                System.Diagnostics.Trace.TraceInformation("Payment confirmation email would be sent for Order " + order.Id);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("Email sending failed: " + ex.Message);
+            }
         }
 
         // ✅ MANUAL SIGNATURE VALIDATION METHOD (Follows PayFast's official process)
@@ -674,7 +565,6 @@ namespace African_Beauty_Trading.Controllers
                 return computedSignature == signatureSent;
             }
         }
-
 
         public ActionResult OrderConfirmation(int id)
         {

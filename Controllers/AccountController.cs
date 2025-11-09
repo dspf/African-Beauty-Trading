@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
@@ -12,7 +12,8 @@ using African_Beauty_Trading.Models;
 
 namespace African_Beauty_Trading.Controllers
 {
-    [Authorize]
+    [AllowAnonymous]
+
     public class AccountController : Controller
     {
         private ApplicationSignInManager _signInManager;
@@ -57,8 +58,10 @@ namespace African_Beauty_Trading.Controllers
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
-            ViewBag.ReturnUrl = returnUrl;
-            return View();
+            // Sanitize ReturnUrl to avoid redirect loops and oversized/nested query strings
+            var sanitizedReturnUrl = SanitizeReturnUrl(returnUrl);
+            ViewBag.ReturnUrl = sanitizedReturnUrl;
+            return View(new LoginViewModel()); // This ensures Model is never null
         }
 
         //
@@ -68,40 +71,78 @@ namespace African_Beauty_Trading.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
         {
+            // Ensure ReturnUrl is preserved for view rendering and form posting (sanitized)
+            var safeReturnUrl = SanitizeReturnUrl(returnUrl);
+            ViewBag.ReturnUrl = safeReturnUrl;
+
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
-            switch (result)
+            try
             {
-                case SignInStatus.Success:
-                    var user = UserManager.FindByEmail(model.Email);
-                    if (UserManager.IsInRole(user.Id, "Admin"))
-                        return RedirectToAction("Dashboard", "Admin");
-                    else if (UserManager.IsInRole(user.Id, "Driver"))
-                        return RedirectToAction("Dashboard", "Driver");
-                    else if (UserManager.IsInRole(user.Id, "Customer"))
-                        return RedirectToAction("Browse", "Customer");
-                    else
+                // Add null checks for UserManager and SignInManager
+                if (UserManager == null)
+                {
+                    ModelState.AddModelError("", "System temporarily unavailable. Please try again later.");
+                    return View(model);
+                }
+
+                if (SignInManager == null)
+                {
+                    ModelState.AddModelError("", "System temporarily unavailable. Please try again later.");
+                    return View(model);
+                }
+
+                var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+
+                switch (result)
+                {
+                    case SignInStatus.Success:
+                        // Add null check for user lookup
+                        var user = await UserManager.FindByEmailAsync(model.Email);
+
+                        // Prefer redirecting to the original local ReturnUrl when valid and not the login page itself
+                        if (!string.IsNullOrEmpty(safeReturnUrl))
+                        {
+                            return Redirect(safeReturnUrl);
+                        }
+
+                        if (user != null)
+                        {
+                            // Add null check for role checking
+                            if (await UserManager.IsInRoleAsync(user.Id, "Admin"))
+                                return RedirectToAction("Dashboard", "Admin");
+                            else if (await UserManager.IsInRoleAsync(user.Id, "Driver"))
+                                return RedirectToAction("Dashboard", "Driver");
+                            else if (await UserManager.IsInRoleAsync(user.Id, "Customer"))
+                                return RedirectToAction("Browse", "Customer");
+                        }
+                        // Default redirect if user not found or no roles
                         return RedirectToAction("Index", "Home");
 
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
-                case SignInStatus.Failure:
-                default:
-                    ModelState.AddModelError("", "Invalid login attempt.");
-                    return View(model);
+                    case SignInStatus.LockedOut:
+                        return View("Lockout");
+                    case SignInStatus.RequiresVerification:
+                        return RedirectToAction("SendCode", new { ReturnUrl = safeReturnUrl, RememberMe = model.RememberMe });
+                    case SignInStatus.Failure:
+                    default:
+                        ModelState.AddModelError("", "Invalid login attempt.");
+                        return View(model);
+                }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "An unexpected error occurred. Please try again later.");
+                return View(model);
             }
         }
 
 
         //
         // GET: /Account/VerifyCode
-        [AllowAnonymous]
+        
         public async Task<ActionResult> VerifyCode(string provider, string returnUrl, bool rememberMe)
         {
             // Require that the user has already logged in via username/password or external login
@@ -144,7 +185,7 @@ namespace African_Beauty_Trading.Controllers
 
         //
         // GET: /Account/Register
-        [AllowAnonymous]
+        
         public ActionResult Register()
         {
             return View();
@@ -198,7 +239,7 @@ namespace African_Beauty_Trading.Controllers
 
         //
         // GET: /Account/ConfirmEmail
-        [AllowAnonymous]
+        
         public async Task<ActionResult> ConfirmEmail(string userId, string code)
         {
             if (userId == null || code == null)
@@ -467,11 +508,33 @@ namespace African_Beauty_Trading.Controllers
             }
         }
 
+        // NEW centralized ReturnUrl sanitization helper
+        private string SanitizeReturnUrl(string returnUrl)
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl)) return null;
+            // Only allow local URLs
+            if (!Url.IsLocalUrl(returnUrl)) return null;
+
+            var lower = returnUrl.ToLowerInvariant();
+
+            // Avoid redirecting back to login page
+            if (lower.StartsWith("/account/login")) return null;
+
+            // Drop nested ReturnUrl chains to prevent exponential growth
+            if (lower.Contains("returnurl=")) return null;
+
+            // Guard against excessively long query strings
+            if (returnUrl.Length > 512) return null;
+
+            return returnUrl;
+        }
+
         private ActionResult RedirectToLocal(string returnUrl)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            var safe = SanitizeReturnUrl(returnUrl);
+            if (!string.IsNullOrEmpty(safe))
             {
-                return Redirect(returnUrl);
+                return Redirect(safe);
             }
             return RedirectToAction("Index", "Home");
         }

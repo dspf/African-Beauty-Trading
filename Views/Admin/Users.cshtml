@@ -1,0 +1,266 @@
+﻿@model IEnumerable<African_Beauty_Trading.Controllers.UserViewModel>
+
+@{
+    ViewBag.Title = "User Management";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white rounded-4 rounded-bottom-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-users me-2"></i>User Management
+                        </h2>
+                        <span class="badge bg-light text-primary fs-6">
+                            Total Users: @Model.Count()
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Phone Number</th>
+                                    <th>Email Confirmed</th>
+                                    <th>Role</th>
+                                    <th>Account Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var userVm in Model)
+                                {
+                                    var user = userVm.User;
+                                    var userRole = userVm.Role;
+
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 bg-light rounded-circle p-2 me-3">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <strong>@user.UserName</strong>
+                                                    <br>
+                                                    <small class="text-muted">ID: @user.Id</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@user.Email</td>
+                                        <td>@(user.PhoneNumber ?? "Not provided")</td>
+                                        <td>
+                                            @if (user.EmailConfirmed)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Confirmed
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>Pending
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                @(userRole == "Admin" ? "bg-danger" :
+                                                  userRole == "Driver" ? "bg-warning text-dark" : "bg-info")">
+                                                @userRole
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (user.LockoutEndDateUtc != null && user.LockoutEndDateUtc > DateTime.Now)
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-lock me-1"></i>Locked
+                                                </span>
+                                            }
+                                            else if (user.TwoFactorEnabled)
+                                            {
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-shield-alt me-1"></i>2FA Enabled
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Active
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#editUserModal"
+                                                        data-userid="@user.Id" data-username="@user.UserName"
+                                                        data-useremail="@user.Email" data-userrole="@userRole"
+                                                        data-emailconfirmed="@user.EmailConfirmed.ToString().ToLower()"
+                                                        data-lockoutend="@(user.LockoutEndDateUtc > DateTime.Now ? "locked" : "")">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        onclick="confirmDeleteUser('@user.Id', '@user.UserName')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" name="userId">
+                    <div class="mb-3">
+                        <label for="userName" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="userName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="userEmail" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userRole" class="form-label">Role</label>
+                        <select class="form-select" id="userRole" name="role">
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Driver">Driver</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="emailConfirmed" name="emailConfirmed">
+                        <label class="form-check-label" for="emailConfirmed">Email Confirmed</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lockoutEnd" class="form-label">Account Lockout</label>
+                        <select class="form-select" id="lockoutEnd" name="lockoutEnd">
+                            <option value="">Active (No Lockout)</option>
+                            <option value="1">Lock for 1 hour</option>
+                            <option value="24">Lock for 1 day</option>
+                            <option value="168">Lock for 1 week</option>
+                            <option value="permanent">Permanent Lock</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">Update User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user: <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteUser()">Delete User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentUserId = null;
+
+        // Edit User Modal
+        $('#editUserModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var userId = button.data('userid');
+            var userName = button.data('username');
+            var userEmail = button.data('useremail');
+            var userRole = button.data('userrole');
+            var emailConfirmed = button.data('emailconfirmed') === 'true';
+            var isLocked = button.data('lockoutend') === 'locked';
+
+            currentUserId = userId;
+            $('#editUserId').val(userId);
+            $('#userName').val(userName);
+            $('#userEmail').val(userEmail);
+            $('#userRole').val(userRole);
+            $('#emailConfirmed').prop('checked', emailConfirmed);
+            $('#lockoutEnd').val(isLocked ? 'permanent' : '');
+        });
+
+        function updateUser() {
+            var userId = $('#editUserId').val();
+            var role = $('#userRole').val();
+            var emailConfirmed = $('#emailConfirmed').is(':checked');
+            var lockoutEnd = $('#lockoutEnd').val();
+
+            $.post('@Url.Action("UpdateUser", "Admin")', {
+                userId: userId,
+                role: role,
+                emailConfirmed: emailConfirmed,
+                lockoutEnd: lockoutEnd
+            }, function (response) {
+                if (response.success) {
+                    $('#editUserModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            }).fail(function () {
+                alert('An error occurred while updating the user.');
+            });
+        }
+
+        function confirmDeleteUser(userId, userName) {
+            currentUserId = userId;
+            $('#deleteUserName').text(userName);
+            $('#deleteUserModal').modal('show');
+        }
+
+        function deleteUser() {
+            $.post('@Url.Action("DeleteUser", "Admin")', {
+                userId: currentUserId
+            }, function (response) {
+                if (response.success) {
+                    $('#deleteUserModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            }).fail(function () {
+                alert('An error occurred while deleting the user.');
+            });
+        }
+
+        function viewUserDetails(userId) {
+            window.location.href = '@Url.Action("UserDetails", "Admin")' + '?id=' + userId;
+        }
+    </script>
+}

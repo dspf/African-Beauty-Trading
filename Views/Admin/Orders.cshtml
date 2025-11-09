@@ -12,7 +12,6 @@
             <th>Customer Details</th>
             <th>Contact</th>
             <th>Order Date</th>
-            <th>Order Type</th>
             <th>Total Price</th>
             <th>Payment Status</th>
             <th>Actions</th>
@@ -45,12 +44,11 @@
                 </td>
                 <td>
                     <div class="d-flex flex-column">
-                        <strong>@(order.Customer?.FirstName ?? "N/A") @(order.Customer?.LastName ?? "")</strong>
-                        
+                        <strong>@((order.Customer != null ? order.Customer.FirstName : "N/A")) @((order.Customer != null ? order.Customer.LastName : ""))</strong>
                     </div>
                 </td>
                 <td>
-                    @if (!string.IsNullOrEmpty(order.Customer?.PhoneNumber))
+                    @if (order.Customer != null && !string.IsNullOrEmpty(order.Customer.PhoneNumber))
                     {
                         <a href="tel:@order.Customer.PhoneNumber" class="text-decoration-none">
                             <i class="fas fa-phone text-primary me-1"></i>
@@ -62,13 +60,8 @@
                         <span class="text-muted">No phone</span>
                     }
                 </td>
-                <td>@order.OrderDate.Value.ToString("yyyy-MM-dd")</td>
-                <td>
-                    <span class="badge @(order.OrderType == "Rental" ? "bg-info" : "bg-primary")">
-                        @order.OrderType
-                    </span>
-                </td>
-                <td>R @(order.TotalPrice * 100)</td>
+                <td>@(order.OrderDate.HasValue ? order.OrderDate.Value.ToString("yyyy-MM-dd") : "")</td>
+                <td>R @order.TotalPrice.ToString("N2")</td>
                 <td>
                     @if (order.PaymentStatus == "Paid")
                     {

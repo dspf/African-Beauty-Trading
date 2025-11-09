@@ -1,0 +1,18 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore as distinct layers
+COPY AfricanBeautyTrading.Core.csproj ./
+RUN dotnet restore AfricanBeautyTrading.Core.csproj
+
+# Copy everything and build
+COPY . ./
+RUN dotnet publish AfricanBeautyTrading.Core.csproj -c Release -o /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish ./
+EXPOSE 80
+ENTRYPOINT ["dotnet", "AfricanBeautyTrading.Core.dll"]

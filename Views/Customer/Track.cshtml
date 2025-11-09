@@ -1,133 +1,740 @@
-﻿@model African_Beauty_Trading.Models.Order
+@model African_Beauty_Trading.Models.Order
 
 @{
-    ViewBag.Title = "Order Details";
+    ViewBag.Title = "Track Your Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <h2>Order #@Model.Id</h2>
-
-    <div class="row">
-        <div class="col-md-8">
-            <!-- Order Details -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h4>Order Information</h4>
+<div class="container-fluid px-0">
+    <!-- Header Section -->
+    <div class="tracking-header bg-gradient-primary text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-3">
+                        @if (Model.CourierStatus == "Delivered")
+                        {
+                            <text>🎉 Order Delivered!</text>
+                        }
+                        else if (Model.PaymentStatus == "Paid")
+                        {
+                            <text>📦 Order Confirmed!</text>
+                        }
+                        else
+                        {
+                            <text>🛒 Order Received</text>
+                        }
+                    </h1>
+                    <p class="lead mb-4">
+                        @if (Model.CourierStatus == "Delivered")
+                        {
+                            <text>Your order has been successfully delivered. Thank you for shopping with us!</text>
+                        }
+                        else if (Model.PaymentStatus == "Paid")
+                        {
+                            <text>Thank you for your purchase! We're preparing your order for delivery.</text>
+                        }
+                        else
+                        {
+                            <text>We've received your order and are awaiting payment confirmation.</text>
+                        }
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="order-badge">
+                            <span class="badge-title">Order #</span>
+                            <span class="badge-value">@Model.Id</span>
+                        </div>
+                        <div class="order-badge">
+                            <span class="badge-title">Placed On</span>
+                            <span class="badge-value">
+                                @if (Model.OrderDate.HasValue)
+                                {
+                                    @Model.OrderDate.Value.ToString("MMM dd, yyyy")
+                                }
+                                else
+                                {
+                                    <text>N/A</text>
+                                }
+                            </span>
+                        </div>
+                        <div class="order-badge">
+                            <span class="badge-title">Total</span>
+                            <span class="badge-value">R @Model.TotalPrice.ToString("N2")</span>
+                        </div>
+                        <div class="order-badge">
+                            <span class="badge-title">Status</span>
+                            <span class="badge-value @(Model.PaymentStatus == "Paid" ? "text-success" : "text-warning")">
+                                @Model.PaymentStatus
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Customer Information -->
-                    <div class="customer-info mb-3 p-3 bg-light rounded">
-                        <h5>👤 Customer Details</h5>
-                        <p><strong>Name:</strong> @(Model.Customer?.FirstName ?? "N/A") @(Model.Customer?.LastName ?? "")</p>
-                        <p>
-                            <strong>Phone:</strong>
-                            @if (!string.IsNullOrEmpty(Model.Customer?.PhoneNumber))
+                <div class="col-md-4 text-center">
+                    <div class="delivery-estimate">
+                        <i class="fas fa-shipping-fast fa-4x mb-3"></i>
+                        <h5>Estimated Delivery</h5>
+                        <p class="mb-0 fw-bold">
+                            @if (Model.EstimatedDeliveryDate.HasValue)
                             {
-                                <a href="tel:@Model.Customer.PhoneNumber" class="text-decoration-none">
-                                    @Model.Customer.PhoneNumber
-                                </a>
+                                @Model.EstimatedDeliveryDate.Value.ToString("dddd, MMMM dd")
+                            }
+                            else if (Model.PaymentStatus == "Paid")
+                            {
+                                <text>Calculating...</text>
                             }
                             else
                             {
-                                <span class="text-muted">Not provided</span>
+                                <text>After payment confirmation</text>
                             }
                         </p>
+                        @if (!Model.EstimatedDeliveryDate.HasValue && Model.PaymentStatus == "Paid")
+                        {
+                            <small class="text-light">Usually 3-5 business days</small>
+                        }
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <p><strong>Status:</strong> <span class="badge bg-info">@Model.DeliveryStatus</span></p>
-                    <p><strong>Order Date:</strong> @Model.OrderDate.Value.ToString("f")</p>
-                    <p><strong>Delivery Address:</strong> @Model.DeliveryAddress</p>
-
-                    @if (!string.IsNullOrEmpty(Model.DriverId))
+    <!-- Progress Tracker -->
+    <div class="container mt-5">
+        <div class="tracking-progress">
+            <div class="progress-steps">
+                @{
+                    var steps = new[]
                     {
-                        <p><strong>Driver Assigned:</strong> Yes</p>
+                        new {
+                            Status = "Order Placed",
+                            Icon = "fas fa-shopping-cart",
+                            IsActive = true,
+                            IsCompleted = true,
+                            Description = "Order received"
+                        },
+                        new {
+                            Status = "Payment Confirmed",
+                            Icon = "fas fa-check-circle",
+                            IsActive = Model.PaymentStatus == "Paid",
+                            IsCompleted = Model.PaymentStatus == "Paid",
+                            Description = Model.PaymentStatus == "Paid" ? "Payment received" : "Awaiting payment"
+                        },
+                        new {
+                            Status = "Processing",
+                            Icon = "fas fa-cogs",
+                            IsActive = Model.CourierStatus == "Processing",
+                            IsCompleted = Model.CourierStatus == "Processing" || Model.CourierStatus == "Shipped" || Model.CourierStatus == "Delivered",
+                            Description = "Preparing your order"
+                        },
+                        new {
+                            Status = "Shipped",
+                            Icon = "fas fa-shipping-fast",
+                            IsActive = Model.CourierStatus == "Shipped",
+                            IsCompleted = Model.CourierStatus == "Shipped" || Model.CourierStatus == "Delivered",
+                            Description = Model.CourierStatus == "Shipped" || Model.CourierStatus == "Delivered" ? "With " + Model.CourierName : "Ready for shipment"
+                        },
+                        new {
+                            Status = "Delivered",
+                            Icon = "fas fa-home",
+                            IsActive = Model.CourierStatus == "Delivered",
+                            IsCompleted = Model.CourierStatus == "Delivered",
+                            Description = Model.CourierStatus == "Delivered" ? "Successfully delivered" : "On the way"
+                        }
+                    };
+                }
+
+                @foreach (var step in steps)
+                {
+                    <div class="progress-step @(step.IsActive ? "active" : "") @(step.IsCompleted ? "completed" : "")">
+                        <div class="step-icon">
+                            <i class="@step.Icon"></i>
+                        </div>
+                        <div class="step-content">
+                            <h6 class="step-title">@step.Status</h6>
+                            <small class="step-desc">@step.Description</small>
+                            @if (step.Status == "Shipped" && step.IsCompleted && !string.IsNullOrEmpty(Model.CourierTrackingNumber))
+                            {
+                                <div class="mt-1">
+                                    <small class="text-primary">
+                                        <i class="fas fa-barcode me-1"></i>@Model.CourierTrackingNumber
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="action-card text-center">
+                    <i class="fas fa-box-open fa-2x text-primary mb-3"></i>
+                    <h5>Order Details</h5>
+                    <p class="text-muted">View all items in your order</p>
+                    @Html.ActionLink("View Details", "OrderDetails", new { id = Model.Id }, new { @class = "btn btn-outline-primary btn-sm" })
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="action-card text-center">
+                    <i class="fas fa-truck fa-2x text-success mb-3"></i>
+                    <h5>Track Package</h5>
+                    <p class="text-muted">Real-time tracking updates</p>
+                    @if (!string.IsNullOrEmpty(Model.CourierTrackingNumber))
+                    {
+                        <button class="btn btn-success btn-sm" onclick="copyTrackingNumber()">
+                            <i class="fas fa-copy me-1"></i>Copy Tracking
+                        </button>
                     }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-clock me-1"></i>Tracking Pending
+                        </button>
+                    }
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="action-card text-center">
+                    <i class="fas fa-headset fa-2x text-info mb-3"></i>
+                    <h5>Need Help?</h5>
+                    <p class="text-muted">Contact our support team</p>
+                    <a href="mailto:support@africanbeauty.co.za" class="btn btn-info btn-sm">Contact Support</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <!-- OTP Section -->
-            @if (!string.IsNullOrEmpty(Model.DeliveryOtp) && Model.DeliveryStatus != "Delivered")
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h5>🚗 Delivery OTP</h5>
+        <!-- Order Summary -->
+        <div class="row mt-5">
+            <div class="col-lg-8">
+                <!-- Order Items -->
+                <div class="card order-items-card">
+                    <div class="card-header bg-transparent border-0">
+                        <h4 class="mb-0">Your Items</h4>
                     </div>
-                    <div class="card-body text-center">
-                        <div class="otp-display" style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #28a745;">
-                            @Model.DeliveryOtp
+                    <div class="card-body">
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <div class="order-item">
+                                <div class="item-image">
+                                    <img src="@Url.Content(!string.IsNullOrEmpty(item.Product.ImageUrl) ? item.Product.ImageUrl : "~/Content/Images/placeholder.jpg")"
+                                         alt="@item.Product.Name"
+                                         onerror="this.src='@Url.Content("~/Content/Images/placeholder.jpg")'" />
+                                </div>
+                                <div class="item-details">
+                                    <h6 class="item-name">@item.Product.Name</h6>
+                                    @if (!string.IsNullOrEmpty(item.Product.Description))
+                                    {
+                                        <p class="item-description text-muted">@item.Product.Description</p>
+                                    }
+                                    <div class="item-meta">
+                                        <span class="quantity">Qty: @item.Quantity</span>
+                                        <span class="price">R @item.Price.ToString("N2") each</span>
+                                    </div>
+                                </div>
+                                <div class="item-total">
+                                    R @((item.Price * item.Quantity).ToString("N2"))
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Order Total -->
+                        <div class="order-total mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Order Total</h5>
+                                <h4 class="mb-0 text-success">R @Model.TotalPrice.ToString("N2")</h4>
+                            </div>
                         </div>
-                        <p class="text-muted mt-2">
-                            Provide this code to your driver when they arrive
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Delivery Information -->
+                <div class="card delivery-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>Delivery Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="delivery-info">
+                            <div class="info-item">
+                                <i class="fas fa-shipping-fast text-primary"></i>
+                                <div>
+                                    <strong>Courier Service</strong>
+                                    <p class="mb-0">@(string.IsNullOrEmpty(Model.CourierName) ? "PEP Courier" : Model.CourierName)</p>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-barcode text-success"></i>
+                                <div>
+                                    <strong>Tracking Number</strong>
+                                    <p class="mb-0">
+                                        @if (!string.IsNullOrEmpty(Model.CourierTrackingNumber))
+                                        {
+                                            <code class="tracking-code">@Model.CourierTrackingNumber</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Will be assigned after shipment</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                <div>
+                                    <strong>Delivery Address</strong>
+                                    <p class="mb-0 small">@Model.DeliveryAddress</p>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-calendar-alt text-info"></i>
+                                <div>
+                                    <strong>Current Status</strong>
+                                    <p class="mb-0">
+                                        <span class="badge
+                                            @(Model.CourierStatus == "Delivered" ? "bg-success" :
+                                              Model.CourierStatus == "Shipped" ? "bg-primary" :
+                                              Model.CourierStatus == "Processing" ? "bg-info" : "bg-secondary")">
+                                            @Model.CourierStatus
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Card -->
+                <!-- Enhanced Support Card -->
+                <div class="card support-card mt-4">
+                    <div class="card-body text-center">
+                        <i class="fab fa-whatsapp fa-2x text-white mb-3"></i>
+                        <h5 class="text-white">Quick Support</h5>
+                        <p class="text-light mb-3">Get instant help via WhatsApp</p>
+
+                        <div class="support-options">
+                            <!-- Order Status Inquiry -->
+                            <a href="https://wa.me/27682339694?text=Hi%20EleganzeBlend%2C%20I%20want%20to%20check%20the%20status%20of%20my%20order%20%23@(Model.Id)"
+                               class="btn btn-success btn-sm w-100 mb-2"
+                               target="_blank">
+                                <i class="fas fa-search me-1"></i>Check Order Status
+                            </a>
+
+                            <!-- Delivery Inquiry -->
+                            <a href="https://wa.me/27682339694?text=Hi%20EleganzeBlend%2C%20I%20have%20a%20question%20about%20the%20delivery%20of%20order%20%23@(Model.Id)"
+                               class="btn btn-outline-light btn-sm w-100 mb-2"
+                               target="_blank">
+                                <i class="fas fa-truck me-1"></i>Delivery Question
+                            </a>
+
+                            <!-- General Support -->
+                            <a href="https://wa.me/27682339694?text=Hi%20EleganzeBlend%20Support%2C%20I%20need%20assistance%20with%20my%20order%20%23@(Model.Id)"
+                               class="btn btn-outline-light btn-sm w-100"
+                               target="_blank">
+                                <i class="fas fa-headset me-1"></i>General Support
+                            </a>
+                        </div>
+
+                        <div class="mt-3">
+                            <small class="text-light opacity-75">
+                                <i class="fas fa-clock me-1"></i>24/7 Support &nbsp;|&nbsp;
+                                <i class="fas fa-check me-1"></i>Instant Reply
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Status -->
+                <div class="card payment-card mt-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-credit-card fa-2x @(Model.PaymentStatus == "Paid" ? "text-success" : "text-warning") mb-3"></i>
+                        <h5>Payment Status</h5>
+                        <p class="mb-2">
+                            <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning")">
+                                @Model.PaymentStatus
+                            </span>
                         </p>
                         <small class="text-muted">
-                            Generated: @Model.OtpGeneratedAt.Value.ToString("g")
+                            @if (Model.PaymentStatus == "Paid")
+                            {
+                                if (Model.OrderDate.HasValue)
+                                {
+                                    <text>Payment confirmed on @Model.OrderDate.Value.ToString("MMM dd, yyyy")</text>
+                                }
+                                else
+                                {
+                                    <text>Payment confirmed</text>
+                                }
+                            }
+                            else
+                            {
+                                <text>Awaiting payment confirmation</text>
+                            }
                         </small>
                     </div>
                 </div>
-            }
-            else if (Model.DeliveryStatus == "Delivered")
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h5>✅ Delivery Completed</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <p>Your order has been successfully delivered.</p>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Order Items -->
-    <div class="card">
-        <div class="card-header">
-            <h4>Order Items</h4>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.OrderItems)
-                    {
-                        <tr>
-                            <td>
-                                @if (!string.IsNullOrEmpty(item.Product.ImagePath))
-                                {
-                                    <img src="@item.Product.ImagePath" alt="@item.Product" style="max-width: 100px; max-height: 100px;" class="img-thumbnail" />
-                                }
-                            </td>
-                            <td>@item.Product.Name</td>
-                            <td>@item.Quantity</td>
-                            <td>R @(item.Price * item.Quantity)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .otp-display {
-        background: #f8fff8;
-        border: 2px dashed #28a745;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 10px 0;
+    /* Header Styles */
+    .tracking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 0 0 30px 30px;
     }
 
-    .badge {
-        padding: 6px 12px;
+    .order-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+    }
+
+    .badge-title {
+        display: block;
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+
+    .badge-value {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    /* Progress Tracker */
+    .tracking-progress {
+        background: white;
+        padding: 30px;
         border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+
+        .progress-steps:before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+
+    .progress-step {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        flex: 1;
+    }
+
+        .progress-step.completed .step-icon {
+            background: #28a745;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .progress-step.active .step-icon {
+            background: #007bff;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 5px rgba(0, 123, 255, 0.2);
+        }
+
+        .progress-step:not(.completed):not(.active) .step-icon {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 3px solid #e9ecef;
+        }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .step-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .step-desc {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    /* Action Cards */
+    .action-card {
+        padding: 25px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
+        border: 1px solid #f1f3f4;
+    }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+    /* Order Items */
+    .order-items-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #f1f3f4;
+        transition: background-color 0.3s ease;
+    }
+
+        .order-item:hover {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 20px;
+    }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #2c3e50;
+    }
+
+    .item-description {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .item-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .item-total {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #28a745;
+    }
+
+    .order-total {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    /* Delivery Card */
+    .delivery-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .delivery-info {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+        .info-item i {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+    .tracking-code {
+        background: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+
+    /* Support Card */
+    .support-card {
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .payment-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .progress-steps {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+            .progress-steps:before {
+                display: none;
+            }
+
+        .order-item {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .item-image {
+            margin-right: 0;
+            margin-bottom: 15px;
+        }
+
+        .item-meta {
+            justify-content: center;
+        }
     }
 </style>
+
+@section Scripts {
+    <script>
+        function copyTrackingNumber() {
+            var trackingNumber = '@Model.CourierTrackingNumber';
+            if (trackingNumber) {
+                navigator.clipboard.writeText(trackingNumber).then(function () {
+                    showToast('Tracking number copied to clipboard!', 'success');
+                }).catch(function () {
+                    showToast('Failed to copy tracking number', 'error');
+                });
+            }
+        }
+
+        function trackWhatsAppClick() {
+            // You can add analytics tracking here
+            console.log('WhatsApp support clicked for order: @Model.Id');
+
+            // Optional: Send analytics event
+            // gtag('event', 'whatsapp_click', {
+            //     'event_category': 'support',
+            //     'event_label': 'Order @Model.Id'
+            // });
+        }
+
+        function showToast(message, type) {
+            var toast = document.createElement('div');
+            toast.className = 'alert alert-' + type + ' alert-dismissible fade show position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+
+            var icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = '<strong>' + icon + ' ' + message + '</strong><button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+
+            document.body.appendChild(toast);
+
+            setTimeout(function() {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Auto-refresh for active orders
+        $(document).ready(function () {
+            var isDelivered = '@Model.CourierStatus' === 'Delivered';
+            var isPaid = '@Model.PaymentStatus' === 'Paid';
+
+            if (!isDelivered && isPaid) {
+                setTimeout(function () {
+                    location.reload();
+                }, 30000);
+            }
+        });
+    </script>       
+    <script>
+        function copyTrackingNumber() {
+            var trackingNumber = '@Model.CourierTrackingNumber';
+            if (trackingNumber) {
+                navigator.clipboard.writeText(trackingNumber).then(function () {
+                    showToast('Tracking number copied to clipboard!', 'success');
+                }).catch(function () {
+                    showToast('Failed to copy tracking number', 'error');
+                });
+            }
+        }
+
+        function showToast(message, type) {
+            var toast = document.createElement('div');
+            toast.className = 'alert alert-' + type + ' alert-dismissible fade show position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+
+            var icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = '<strong>' + icon + ' ' + message + '</strong><button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+
+            document.body.appendChild(toast);
+
+            setTimeout(function() {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Auto-refresh for active orders
+        $(document).ready(function () {
+            var isDelivered = '@Model.CourierStatus' === 'Delivered';
+            var isPaid = '@Model.PaymentStatus' === 'Paid';
+
+            if (!isDelivered && isPaid) {
+                setTimeout(function () {
+                    location.reload();
+                }, 30000);
+            }
+        });
+    </script>
+}

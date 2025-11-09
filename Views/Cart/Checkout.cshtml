@@ -3,6 +3,13 @@
 @{
     ViewBag.Title = "Checkout";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var cartSession = (List<African_Beauty_Trading.Models.CartItem>)Session["Cart"];
+    decimal purchasesSubtotal = cartSession.Sum(c => c.Price * c.Quantity);
+    // Define rental variables with default values of 0 to fix compilation errors
+    decimal rentalPerDaySubtotal = 0;
+    decimal rentalDepositTotal = 0;
+    int defaultDays = 1;
+    decimal initialGrandTotal = purchasesSubtotal;
 }
 
 <div class="container py-5">
@@ -53,8 +60,7 @@
                     {
                         @Html.AntiForgeryToken()
 
-                        <!-- Hidden field for OrderType -->
-                        @Html.HiddenFor(m => m.OrderType, new { Value = ViewBag.OrderType })
+                    
 
                         <!-- Delivery Priority -->
                         <div class="form-group mb-4">
@@ -106,41 +112,39 @@
                             @Html.ValidationMessageFor(m => m.DeliveryAddress, "", new { @class = "text-danger" })
                         </div>
 
-                        <!-- Rental Section (if applicable) -->
+                        // Rental Section (if applicable)
                         if (ViewBag.OrderType != null && ViewBag.OrderType.ToString() == "Rent")
                         {
                             <div class="border-top pt-3 mt-3">
-                                <h6 class="text-secondary mb-3">Rental Details</h6>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            @Html.LabelFor(m => m.RentStartDate, "Start Date", new { @class = "form-label" })
-                                            @Html.TextBoxFor(m => m.RentStartDate, new
-                                            {
-                                                @class = "form-control",
-                                                type = "date",
-                                                required = "required"
-                                            })
-                                            @Html.ValidationMessageFor(m => m.RentStartDate, "", new { @class = "text-danger" })
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            @Html.LabelFor(m => m.RentEndDate, "Return Date", new { @class = "form-label" })
-                                            @Html.TextBoxFor(m => m.RentEndDate, new
-                                            {
-                                                @class = "form-control",
-                                                type = "date",
-                                                required = "required"
-                                            })
-                                            <small class="form-text text-muted">Driver will collect at this time</small>
-                                            @Html.ValidationMessageFor(m => m.RentEndDate, "", new { @class = "text-danger" })
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- Rental section removed -->
                             </div>
                         }
+
+                        <!-- Order Summary -->
+                        <div class="border-top pt-3 mt-3">
+                            <h6 class="text-secondary mb-3">Order Summary</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>Purchases Subtotal</span>
+                                <strong>R @purchasesSubtotal.ToString("N2")</strong>
+                            </div>
+                            @if (rentalPerDaySubtotal > 0)
+                            {
+                                <div class="d-flex justify-content-between">
+                                    <span>Rental per day subtotal</span>
+                                    <strong>R @rentalPerDaySubtotal.ToString("N2")</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Rental deposit total</span>
+                                    <strong>R @rentalDepositTotal.ToString("N2")</strong>
+                                </div>
+                                <div class="small text-muted">Days: <span id="summary-days">@defaultDays</span></div>
+                            }
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <span>Grand Total</span>
+                                <strong id="grand-total">R @initialGrandTotal.ToString("N2")</strong>
+                            </div>
+                        </div>
 
                         <!-- Submit Button -->
                         <div class="text-center mt-4">
@@ -153,32 +157,35 @@
             </div>
         </div>
     </div>
-</div>
+</div>  
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('checkoutForm');
         const addressInput = document.getElementById('DeliveryAddress');
-        const rentStart = document.getElementById('RentStartDate');
-        const rentEnd = document.getElementById('RentEndDate');
+        // Rental references removed
 
-        if (rentStart && rentEnd) {
-            const today = new Date().toISOString().split('T')[0];
-            rentStart.min = today;
+        // Subtotals injected from server for consistent client-side display
+        const purchasesSubtotal = parseFloat('@purchasesSubtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
+        const rentalPerDaySubtotal = parseFloat('@rentalPerDaySubtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
+        const rentalDepositTotal = parseFloat('@rentalDepositTotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
+        const defaultDays = @defaultDays;
 
-            rentStart.addEventListener('change', function () {
+        function recalculateSummary() {
+            let days = defaultDays;
+            if (rentStart && rentEnd && rentStart.value && rentEnd.value) {
                 const startDate = new Date(rentStart.value);
-                if (!startDate) return;
-
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 3);
-
-                // Automatically set the return date to 3 days after start date
-                rentEnd.value = endDate.toISOString().split('T')[0];
-                rentEnd.min = startDate.toISOString().split('T')[0];
-                rentEnd.max = endDate.toISOString().split('T')[0];
-            });
+                const endDate = new Date(rentEnd.value);
+                const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+                days = diffDays >= 1 ? diffDays : 1;
+            }
+            const total = purchasesSubtotal + (rentalPerDaySubtotal * days) + rentalDepositTotal;
+            const grandEl = document.getElementById('grand-total');
+            // Rental date code removed
         }
+
+        // Initial summary calculation
+        recalculateSummary();
 
         form.addEventListener('submit', function (e) {
             if (addressInput.value.trim().length < 10) {
@@ -208,12 +215,8 @@
         });
     });
 </script>
-
-
-
 <!-- Add Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 <style>
     .card {
         border-radius: 10px;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using African_Beauty_Trading.Filters;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -6,6 +7,8 @@ using System.Web.Mvc;
 
 namespace African_Beauty_Trading.Controllers
 {
+    [AllowAnonymous]
+
     public class HomeController : Controller
     {
         public ActionResult Index()

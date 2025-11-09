@@ -1,4 +1,4 @@
-﻿@model African_Beauty_Trading.Models.Order
+@model African_Beauty_Trading.Models.Order
 
 @using Microsoft.AspNet.Identity
 
@@ -29,11 +29,11 @@
             <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
                     <label style="color: #7f8c8d; font-size: 14px;">Email</label>
-                    <p style="color: #2c3e50; font-weight: 500;">@Model.Customer.Email</p>
+                    <p style="color: #2c3e50; font-weight: 500;">@((Model.Customer != null && !string.IsNullOrEmpty(Model.Customer.Email)) ? Model.Customer.Email : "N/A")</p>
                 </div>
                 <div>
                     <label style="color: #7f8c8d; font-size: 14px;">Delivery Address</label>
-                    <p style="color: #2c3e50; font-weight: 500;">@Model.DeliveryAddress</p>
+                    <p style="color: #2c3e50; font-weight: 500;">@(!string.IsNullOrEmpty(Model.DeliveryAddress) ? Model.DeliveryAddress : "N/A")</p>
                 </div>
             </div>
         </div>
@@ -43,19 +43,19 @@
             <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Delivery Timeline</h4>
             <ul style="list-style:none; padding:0; margin:0;">
                 <li style="margin-bottom:10px;">
-                    📦 <strong>Order Created:</strong>
+                    <strong>Order Created:</strong>
                     @(Model.OrderDate.HasValue ? Model.OrderDate.Value.ToString("f") : "Not available")
                 </li>
                 <li style="margin-bottom:10px;">
-                    🚚 <strong>Assigned to Driver:</strong>
+                    <strong>Assigned to Driver:</strong>
                     @(Model.DriverAssignedDate.HasValue ? Model.DriverAssignedDate.Value.ToString("f") : "Pending")
                 </li>
                 <li style="margin-bottom:10px;">
-                    🚗 <strong>Driver Arrived:</strong>
+                    <strong>Driver Arrived:</strong>
                     @(Model.DriverArrivedDate.HasValue ? Model.DriverArrivedDate.Value.ToString("f") : "Not yet")
                 </li>
                 <li>
-                    ✅ <strong>Delivered:</strong>
+                    <strong>Delivered:</strong>
                     @(Model.DeliveryDate.HasValue ? Model.DeliveryDate.Value.ToString("f") : "Not yet")
                 </li>
             </ul>
@@ -83,24 +83,16 @@
                     {
                         @Html.AntiForgeryToken()
                         @Html.Hidden("orderId", Model.Id)
-                        <button type="submit" class="btn btn-warning">🚗 I've Arrived</button>
+                        <button type="submit" class="btn btn-warning">I've Arrived</button>
                     }
 
                     @if (showCompleteForm)
                     {
                         <div class="card mt-4" style="flex:1; min-width:280px;">
                             <div class="card-header bg-primary text-white">
-                                <h5>✅ Complete Delivery</h5>
+                                <h5>Complete Delivery</h5>
                             </div>
                             <div class="card-body">
-                                @* Debug info - remove in production *@
-                                <div class="mb-2 small text-muted">
-                                    <strong>DEBUG:</strong>
-                                    DriverId = @Model.DriverId,
-                                    OTP exists = @(!string.IsNullOrEmpty(Model.DeliveryOtp) ? "yes" : "no"),
-                                    OtpGeneratedAt = @(Model.OtpGeneratedAt?.ToString("u") ?? "null")
-                                </div>
-
                                 @using (Html.BeginForm("CompleteDelivery", "Driver", FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
@@ -112,7 +104,7 @@
                                                placeholder="Enter 6-digit OTP" required maxlength="6" />
                                     </div>
 
-                                    <button type="submit" class="btn btn-success mt-2">✅ Complete Delivery</button>
+                                    <button type="submit" class="btn btn-success mt-2">Complete Delivery</button>
                                 }
                             </div>
                         </div>
@@ -125,7 +117,7 @@
                 <div style="padding: 15px; background: #e8f5e8; border-radius: 6px; border: 1px solid #c8e6c9;">
                     <strong style="color: #2e7d32;">✅ Delivery Completed</strong>
                     <p style="color: #388e3c; margin: 5px 0 0 0;">
-                        Completed on @Model.DeliveryDate?.ToString("f")
+                        Completed on @(Model.DeliveryDate.HasValue ? Model.DeliveryDate.Value.ToString("f") : "")
                     </p>
                 </div>
             }
@@ -134,10 +126,10 @@
         <!-- Google Maps -->
         <div>
             <h4 style="color: #34495e; margin-bottom: 15px; font-weight: 500;">Navigation</h4>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(Model.DeliveryAddress)"
+            <a href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(Model.DeliveryAddress ?? "")"
                target="_blank"
                class="btn btn-primary">
-                📍 Get Directions
+                Get Directions
             </a>
         </div>
     </div>

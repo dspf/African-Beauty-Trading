@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <setParameter name="IIS Web Application Name" value="phakamanidepl0y-001-site1" />
+  <setParameter name="DefaultConnection-Web.config Connection String" value="Data Source=SQL9001.site4now.net;Initial Catalog=db_abed1a_africanbeutydb;User Id=db_abed1a_africanbeutydb_admin;Password=$$Dut010929" />
+</parameters>

@@ -1,4 +1,4 @@
-@model African_Beauty_Trading.Models.Product
+﻿@model African_Beauty_Trading.Models.Product
 
 @{
     ViewBag.Title = "Product Details";
@@ -8,14 +8,18 @@
 <div class="product-detail-container">
     <div class="breadcrumb-nav">
         <a href="@Url.Action("Index", "Home")">Home</a> /
-        <a href="@Url.Action("Index", "Products")">Products</a> /
+        <a href="@Url.Action("Browse", "Customer")">Products</a> /
         <span>@Model.Name</span>
     </div>
 
     <div class="product-detail-card">
         <div class="product-image-section">
             <div class="main-image">
-                <img src="@Url.Content(Model.ImagePath ?? "~/Content/Images/placeholder.jpg")" alt="@Model.Name" class="img-fluid" />
+                <!-- FIXED: Use ImageUrl instead of ImagePath -->
+                <img src="@Url.Content(!string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : "~/Content/Images/placeholder.jpg")"
+                     alt="@Model.Name"
+                     class="img-fluid"
+                     onerror="this.src='@Url.Content("~/Content/Images/placeholder.jpg")'" />
             </div>
         </div>
 
@@ -25,50 +29,106 @@
             <div class="product-meta">
                 <div class="meta-item">
                     <span class="meta-label">Category:</span>
-                    <span class="meta-value">@Model.Category.Name</span>
+                    <span class="meta-value">
+                        @if (Model.Category != null)
+                        {
+                            @Model.Category.Name
+                        }
+                        else
+                        {
+                            <text>No Category</text>
+                        }
+                    </span>
                 </div>
+                <!-- REMOVED: Department section -->
                 <div class="meta-item">
-                    <span class="meta-label">Department:</span>
-                    <span class="meta-value">@Model.Department.Name</span>
+                    <span class="meta-label">Status:</span>
+                    <span class="meta-value">
+                        @if (Model.Featured)
+                        {
+                            <span class="badge bg-warning text-dark">⭐ Featured</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Standard</span>
+                        }
+                    </span>
                 </div>
-                <div class="meta-item">
-                    <span class="meta-label">Size:</span>
-                    <span class="meta-value">@Model.Size</span>
-                </div>
+            </div>
+
+            <div class="description-section">
+                <h3>Description</h3>
+                <p class="product-description">
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        @Model.Description
+                    }
+                    else
+                    {
+                        <span class="text-muted">No description available</span>
+                    }
+                </p>
             </div>
 
             <div class="pricing-section">
                 <div class="price-card">
-                    <div class="price-type">Purchase Price</div>
+                    <div class="price-type">Price</div>
                     <div class="price-amount">R @Model.Price.ToString("N2")</div>
-                </div>
-
-                <div class="price-card rental">
-                    <div class="price-type">Rental Fee</div>
-                    <div class="price-amount">R @Model.RentalFee.ToString("N2")</div>
                 </div>
             </div>
 
             <div class="stock-info">
                 <span class="stock-badge @(Model.Stock > 0 ? "in-stock" : "out-of-stock")">
-                    @(Model.Stock > 0 ? $"{Model.Stock} in stock" : "Out of stock")
+                    @if (Model.Stock > 0)
+                    {
+                        <text>@Model.Stock in stock</text>
+                    }
+                    else
+                    {
+                        <text>Out of stock</text>
+                    }
                 </span>
             </div>
 
             <div class="action-buttons">
-                @using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
+                @if (Model.Stock > 0)
                 {
-                    @Html.Hidden("productId", Model.Id)
-                    @Html.Hidden("isRental", false)
-                    <button type="submit" class="btn btn-buy">Add to Cart - Buy</button>
+                    using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("productId", Model.Id)
+                        <div class="quantity-selector mb-3">
+                            <label for="quantity" class="form-label fw-bold">Quantity:</label>
+                            <select name="quantity" id="quantity" class="form-select" style="max-width: 120px;">
+                                @for (int i = 1; i <= Math.Min(Model.Stock, 10); i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-buy">
+                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                        </button>
+                    }
+                }
+                else
+                {
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-times me-2"></i>Out of Stock
+                    </button>
                 }
 
-                @using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
-                {
-                    @Html.Hidden("productId", Model.Id)
-                    @Html.Hidden("isRental", true)
-                    <button type="submit" class="btn btn-rent">Add to Cart - Rent</button>
-                }
+                <a href="@Url.Action("Browse", "Customer")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+
+            <!-- Additional Product Info -->
+            <div class="additional-info mt-4">
+                <div class="info-card">
+                    <h4><i class="fas fa-shipping-fast me-2"></i>Delivery Information</h4>
+                    <p>This item will be delivered via <strong>PEP Courier</strong>. Estimated delivery: 3-5 business days.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -131,6 +191,8 @@
             width: 100%;
             height: auto;
             display: block;
+            max-height: 500px;
+            object-fit: contain;
         }
 
     .product-info-section {
@@ -153,11 +215,15 @@
 
     .product-meta {
         margin-bottom: 25px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
     }
 
     .meta-item {
         display: flex;
         margin-bottom: 10px;
+        align-items: center;
     }
 
     .meta-label {
@@ -170,30 +236,33 @@
         color: #5a6c7d;
     }
 
-    .pricing-section {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
+    .description-section {
         margin-bottom: 25px;
     }
 
-    @@media (min-width: 576px) {
-        .pricing-section {
-            flex-direction: row;
+        .description-section h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
         }
+
+    .product-description {
+        color: #5a6c7d;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    .pricing-section {
+        margin-bottom: 25px;
     }
 
     .price-card {
-        flex: 1;
-        padding: 15px;
+        padding: 20px;
         border-radius: 8px;
         background: #f8f9fa;
         text-align: center;
+        border: 2px solid #e9ecef;
     }
-
-        .price-card.rental {
-            background: #fff8e6;
-        }
 
     .price-type {
         font-size: 0.9rem;
@@ -202,9 +271,9 @@
     }
 
     .price-amount {
-        font-size: 1.4rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #28a745;
     }
 
     .stock-info {
@@ -212,41 +281,40 @@
     }
 
     .stock-badge {
-        padding: 8px 15px;
+        padding: 10px 20px;
         border-radius: 50px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 1rem;
+        display: inline-block;
     }
 
         .stock-badge.in-stock {
             background: #e7f6e9;
             color: #2a7d2e;
+            border: 1px solid #2a7d2e;
         }
 
         .stock-badge.out-of-stock {
             background: #ffe5e5;
             color: #d32f2f;
+            border: 1px solid #d32f2f;
         }
 
     .action-buttons {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-bottom: 20px;
     }
 
     @@media (min-width: 576px) {
         .action-buttons {
             flex-direction: row;
+            align-items: flex-start;
         }
     }
 
-    .action-buttons form {
-        flex: 1;
-        margin: 0;
-    }
-
     .btn {
-        flex: 1;
         padding: 14px 20px;
         border: none;
         border-radius: 8px;
@@ -261,6 +329,7 @@
         cursor: pointer;
         font-size: 1rem;
         font-family: inherit;
+        flex: 1;
     }
 
     .btn-buy {
@@ -275,15 +344,42 @@
             color: white;
         }
 
-    .btn-rent {
-        background: #ffc107;
-        color: #212529;
+    .btn-outline-secondary {
+        background: transparent;
+        color: #6c757d;
+        border: 2px solid #6c757d;
     }
 
-        .btn-rent:hover {
-            background: #e0a800;
+        .btn-outline-secondary:hover {
+            background: #6c757d;
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-            color: #212529;
         }
+
+    .additional-info {
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+
+    .info-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+        .info-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-card p {
+            color: #5a6c7d;
+            margin: 0;
+        }
+
+    .quantity-selector {
+        max-width: 200px;
+    }
 </style>

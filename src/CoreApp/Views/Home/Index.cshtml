@@ -1,0 +1,127 @@
+@{
+    ViewBag.Title = "EleganzeBlend - Fashion for Men & Women";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main>
+    <!-- Hero Section -->
+    <section class="hero-section" style="background-color: #ffd1dc;">
+        <img src="~/images/Pastel Logo for Eleganzeblend (1).png" alt="EleganzeBlend Fashion" class="img-fluid hero-image" style="max-height:60vh; width:auto; display:block; margin:0 auto; object-fit:contain;" />
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Why Choose EleganzeBlend?</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h3>Premium Quality</h3>
+                    <p>Curated fashion pieces with exceptional craftsmanship and materials</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h3>Fast Shipping</h3>
+                    <p>Free express delivery on orders over R1000</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-undo-alt"></i>
+                    </div>
+                    <h3>Easy Returns</h3>
+                    <p>30-day hassle-free return policy</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-stylist"></i>
+                    </div>
+                    <h3>Style Advice</h3>
+                    <p>Personal styling consultations available</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Shop By Category</h2>
+            <div class="categories-grid">
+                <div class="category-card" data-aos="fade-up" data-aos-delay="100">
+                    <img src="https://images.unsplash.com/photo-1593030103066-0093718efeb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Men's Fashion" class="img-fluid" />
+                    <div class="category-overlay">
+                        <h3>Men's Collection</h3>
+                        <form asp-controller="Account" asp-action="Login" method="post" role="form" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline">Shop Now</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="category-card" data-aos="fade-up" data-aos-delay="200">
+                    <img src="https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Women's Fashion" class="img-fluid" />
+                    <div class="category-overlay">
+                        <h3>Women's Collection</h3>
+                        <form asp-controller="Account" asp-action="Login" method="post" role="form" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline">Shop Now</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="category-card" data-aos="fade-up" data-aos-delay="300">
+                    <img src="https://images.unsplash.com/photo-1520975916090-3105956dac38?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Accessories" class="img-fluid" />
+                    <div class="category-overlay">
+                        <h3>Accessories</h3>
+                        <form asp-controller="Account" asp-action="Register" method="post" role="form" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline">Explore</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- rest of the view copied... -->
+</main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize category tabs
+            initializeCategoryTabs();
+
+            // Newsletter subscription
+            $('.newsletter-form button').click(function () {
+                var email = $('.newsletter-input').val();
+                if (email) {
+                    toastr.success('Thank you for subscribing to our newsletter!');
+                    $('.newsletter-input').val('');
+                } else {
+                    toastr.warning('Please enter your email address');
+                }
+            });
+
+            // Add to cart buttons now redirect to registration
+            $('.add-to-cart').click(function (e) {
+                console.log('Redirecting to registration for shopping...');
+            });
+
+            // Wishlist functionality
+            $('.product-wishlist').click(function (e) {
+                e.preventDefault();
+                $(this).toggleClass('active');
+
+                if ($(this).hasClass('active')) {
+                    $(this).html('<i class="fas fa-heart" style="color: #ffd1dc;"></i>');
+                    toastr.info('Please register to save items to your wishlist');
+                } else {
+                    $(this).html('<i class="fas fa-heart"></i>');
+                }
+            });
+        });
+    </script>
+}

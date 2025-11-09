@@ -4,9 +4,347 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - Driver Dashboard</title>
-    <link href="~/Content/bootstrap.css" rel="stylesheet" />
-    <link href="~/Content/Site.css" rel="stylesheet" />
-    @Scripts.Render("~/bundles/modernizr")
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
+            --primary-color: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --sidebar-bg: #1a2236;
+            --sidebar-hover: #2a3347;
+            --sidebar-active: #4361ee;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        /* Sidebar Styles */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            flex: 0 0 var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #e2e8f0;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 100;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+            flex: 0 0 var(--sidebar-collapsed-width);
+        }
+
+        .admin-sidebar .brand-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-sidebar.collapsed .brand-section {
+            justify-content: center;
+        }
+
+        .brand {
+            font-weight: 700;
+            letter-spacing: .3px;
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .admin-sidebar.collapsed .brand {
+            display: none;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-sidebar .nav-section {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-sidebar .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 1rem;
+            margin-bottom: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .admin-sidebar.collapsed .section-title {
+            display: none;
+        }
+
+        .admin-sidebar .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .admin-sidebar .nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            border-radius: 0;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .admin-sidebar .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .admin-sidebar .nav-link.active {
+            background: var(--sidebar-active);
+            color: white;
+            border-left-color: white;
+        }
+
+        .admin-sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .admin-sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        /* Earnings Panel Styles */
+        .earnings-panel {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            margin: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .admin-sidebar.collapsed .earnings-panel {
+            display: none;
+        }
+
+        .earnings-panel h6 {
+            color: white;
+            font-weight: 600;
+        }
+
+        .earnings-panel .total-earnings h4 {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        .earnings-panel .text-primary {
+            color: #60a5fa !important;
+        }
+
+        .earnings-panel .text-info {
+            color: #38bdf8 !important;
+        }
+
+        .earnings-panel .text-muted {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .earnings-panel hr {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .earnings-panel .btn-outline-primary {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+
+        .earnings-panel .btn-outline-primary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        /* Main Content Styles */
+        .admin-content {
+            flex: 1 1 auto;
+            background: #f5f7fb;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .admin-content.expanded {
+            margin-left: calc(var(--sidebar-collapsed-width) - var(--sidebar-width));
+        }
+
+        .admin-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .user-badge i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        main {
+            flex: 1;
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Card Styles */
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+            border: 1px solid #e5e7eb;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .admin-sidebar {
+                position: fixed;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(0);
+            }
+
+            .admin-sidebar.collapsed {
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+            }
+
+            .admin-content {
+                margin-left: 0 !important;
+            }
+
+            .admin-content.expanded {
+                margin-left: 0 !important;
+            }
+
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+
+        /* Font overrides to prevent unintended monospace rendering */
+        body, main, .admin-content, .dashboard-card, .card-title, .page-title,
+        .table, .table th, .table td, .modal, .modal-header, .modal-body, .modal-footer,
+        h1, h2, h3, h4, h5, h6, p, span, small, label, input, textarea, button {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            font-variant-ligatures: normal;
+        }
+
+        code, pre, kbd, samp {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+    </style>
+
     <script>
         function confirmLogout() {
             if (confirm('Are you sure you want to go home and logout?')) {
@@ -15,6 +353,42 @@
             }
             return false;
         }
+
+        // Toggle sidebar function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const content = document.getElementById('admin-content');
+            const toggleIcon = document.getElementById('sidebar-toggle-icon');
+
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+
+            // Change the toggle icon
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('bi-arrow-left');
+                toggleIcon.classList.add('bi-arrow-right');
+            } else {
+                toggleIcon.classList.remove('bi-arrow-right');
+                toggleIcon.classList.add('bi-arrow-left');
+            }
+
+            // Save state to localStorage
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+
+        // Check saved sidebar state on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('admin-sidebar');
+            const content = document.getElementById('admin-content');
+            const toggleIcon = document.getElementById('sidebar-toggle-icon');
+
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                content.classList.add('expanded');
+                toggleIcon.classList.remove('bi-arrow-left');
+                toggleIcon.classList.add('bi-arrow-right');
+            }
+        });
     </script>
 </head>
 <body>
@@ -22,68 +396,114 @@
     {
         @Html.AntiForgeryToken()
     }
-    <div class="d-flex">
-        <!-- Sidebar -->
-        <div class="bg-dark text-white p-3" style="min-width:220px; height:100vh;">
-            <h4 class="text-center">Driver Panel</h4>
-            <hr />
-            <ul class="nav flex-column">
+
+    <!-- Sidebar -->
+    <nav id="admin-sidebar" class="admin-sidebar">
+        <div class="brand-section">
+            <span class="brand">Driver Panel</span>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i id="sidebar-toggle-icon" class="bi bi-arrow-left"></i>
+            </button>
+        </div>
+
+        <div class="nav-section">
+            <div class="section-title">Navigation</div>
+            <ul class="nav-links">
                 <li class="nav-item">
-                    @Html.ActionLink("🏠 Home & Logout", "Index", "Home", null, new { @class = "nav-link text-white", onclick = "return confirmLogout();" })
+                    <a class="nav-link" href="#" onclick="return confirmLogout();">
+                        <i class="bi bi-house"></i>
+                        <span>Home & Logout</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    @Html.ActionLink("Dashboard", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Dashboard" ? "active" : "")" href="@Url.Action("Dashboard","Driver")">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    @Html.ActionLink("My Deliveries", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Dashboard" ? "active" : "")" href="@Url.Action("Dashboard","Driver")">
+                        <i class="bi bi-truck"></i>
+                        <span>My Deliveries</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    @Html.ActionLink("Completed", "Dashboard", "Driver", null, new { @class = "nav-link text-white" })
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Dashboard" ? "active" : "")" href="@Url.Action("Dashboard","Driver")">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Completed</span>
+                    </a>
                 </li>
-                <!-- Earnings Panel -->
-                <div class="earnings-panel p-3 mb-3 bg-white rounded shadow-sm">
-                    <h6 class="text-center mb-3">💰 Earnings Summary</h6>
-
-                    <div class="text-center mb-2">
-                        <div class="total-earnings">
-                            <small class="text-muted">Total Earnings</small>
-                            <h4 class="text-success mb-0">R @(ViewBag.TotalEarnings?.ToString("N2") ?? "0.00")</h4>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <div class="text-center">
-                            <small class="text-muted">This Month</small>
-                            <div class="text-primary fw-bold">R @(ViewBag.ThisMonthEarnings?.ToString("N2") ?? "0.00")</div>
-                        </div>
-                        <div class="text-center">
-                            <small class="text-muted">Completed</small>
-                            <div class="text-info fw-bold">@(ViewBag.CompletedDeliveriesCount ?? 0)</div>
-                        </div>
-                    </div>
-
-                    <div class="text-center mb-2">
-                        <small class="text-muted">Rate: R30 per delivery</small>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <div class="text-center">
-                        <a href="@Url.Action("Earnings", "Driver")" class="btn btn-sm btn-outline-primary w-100">
-                            <i class="fas fa-chart-line me-1"></i>View Details
-                        </a>
-                    </div>
-                </div>
             </ul>
         </div>
 
-        <!-- Main -->
-        <div class="flex-grow-1 p-4">
-            @RenderBody()
+        <!-- Earnings Panel -->
+        <div class="earnings-panel p-3 mb-3 rounded">
+            <h6 class="text-center mb-3">
+                <i class="fas fa-chart-line me-2"></i>Earnings Summary
+            </h6>
+
+            <div class="text-center mb-2">
+                <div class="total-earnings">
+                    <small class="text-muted">Total Earnings</small>
+                    <h4 class="mb-0">R @((ViewBag.TotalEarnings != null) ? ((decimal)ViewBag.TotalEarnings).ToString("N2") : "0.00")</h4>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2">
+                <div class="text-center">
+                    <small class="text-muted">This Month</small>
+                    <div class="fw-bold">R @((ViewBag.ThisMonthEarnings != null) ? ((decimal)ViewBag.ThisMonthEarnings).ToString("N2") : "0.00")</div>
+                </div>
+                <div class="text-center">
+                    <small class="text-muted">Completed</small>
+                    <div class="fw-bold">@(ViewBag.CompletedDeliveriesCount ?? 0)</div>
+                </div>
+            </div>
+
+            <div class="text-center mb-2">
+                <small class="text-muted">Rate: R30 per delivery</small>
+            </div>
+
+            <hr class="my-2">
+
+            <div class="text-center">
+                <a href="@Url.Action("Earnings", "Driver")" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="fas fa-chart-line me-1"></i>View Details
+                </a>
+            </div>
         </div>
+
+        <div class="mt-auto p-3">
+            <div class="user-info d-flex align-items-center">
+                <div class="user-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <i class="bi bi-person-fill text-white"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name small">Driver Account</div>
+                    <div class="user-role text-muted small">Delivery Partner</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div id="admin-content" class="admin-content">
+        <div class="admin-topbar">
+            <div class="page-title">@ViewBag.Title</div>
+            <div class="user-badge">
+                <i class="bi bi-person-circle"></i>
+                <span>Driver</span>
+            </div>
+        </div>
+
+        <main>
+            @RenderBody()
+        </main>
     </div>
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
+
+    <!-- Bootstrap & jQuery Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("scripts", required: false)
 </body>
 </html>

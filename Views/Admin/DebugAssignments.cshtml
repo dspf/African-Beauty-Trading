@@ -1,0 +1,99 @@
+@model List<African_Beauty_Trading.Models.DriverAssignment>
+
+@{
+    ViewBag.Title = "Debug Driver Assignments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>Debug Driver Assignments</h2>
+            
+            @if (ViewBag.OrderId != null)
+            {
+                <div class="alert alert-info">
+                    Showing assignments for Order #@ViewBag.OrderId
+                </div>
+            }
+
+            <div class="mb-3">
+                <h4>Recent Orders:</h4>
+                @if (ViewBag.AllOrders != null)
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Payment Status</th>
+                                <th>Driver ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in ViewBag.AllOrders)
+                            {
+                                <tr>
+                                    <td>@order.Id</td>
+                                    <td>@((order.Customer != null ? order.Customer.FirstName : "N/A")) @((order.Customer != null ? order.Customer.LastName : ""))</td>
+                                    <td>@(order.OrderDate.HasValue ? order.OrderDate.Value.ToString("yyyy-MM-dd HH:mm") : "N/A")</td>
+                                    <td>@order.PaymentStatus</td>
+                                    <td>@(order.DriverId ?? "None")</td>
+                                    <td>
+                                        @Html.ActionLink("Debug", "DebugAssignments", new { orderId = order.Id }, new { @class = "btn btn-sm btn-info" })
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <h4>Driver Assignments:</h4>
+            @if (Model != null && Model.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Assignment ID</th>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Driver ID</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Assigned Date</th>
+                            <th>Expiry Time</th>
+                            <th>Response Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in Model)
+                        {
+                            <tr>
+                                <td>@assignment.Id</td>
+                                <td>@assignment.OrderId</td>
+                                <td>@((assignment.Order != null && assignment.Order.Customer != null ? assignment.Order.Customer.FirstName : "N/A")) @((assignment.Order != null && assignment.Order.Customer != null ? assignment.Order.Customer.LastName : ""))</td>
+                                <td>@((DateTime?)assignment.CreatedDate != null ? assignment.CreatedDate.ToString("yyyy-MM-dd HH:mm") : "N/A")</td>
+                                <td>@((DateTime?)assignment.AssignedDate != null ? assignment.AssignedDate.ToString("yyyy-MM-dd HH:mm") : "N/A")</td>
+                                <td>@((assignment.ExpiryTime != null) ? assignment.ExpiryTime.ToString("yyyy-MM-dd HH:mm") : "N/A")</td>
+                                <td>@(assignment.ResponseDate.HasValue ? assignment.ResponseDate.Value.ToString("yyyy-MM-dd HH:mm") : "N/A")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    No driver assignments found.
+                </div>
+            }
+
+            <div class="mt-3">
+                @Html.ActionLink("Back to Dashboard", "Dashboard", "Admin", null, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,22 +1,29 @@
 ﻿@using Microsoft.AspNet.Identity
-@if (Request.IsAuthenticated)
-{
-    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+@using System.Web.Mvc
+@{
+    var isAuthenticated = HttpContext.Current.User.Identity.IsAuthenticated;
+}
+<ul class="nav navbar-nav navbar-right">
+    @if (isAuthenticated)
     {
-    @Html.AntiForgeryToken()
-
-    <ul class="navbar-nav navbar-right">
-        <li>
-            @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage", @class="nav-link" })
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @HttpContext.Current.User.Identity.Name
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                <li>@Html.ActionLink("Manage", "Index", "Manage")</li>
+                <li>
+                    @using (Html.BeginForm("Logout", "Account", FormMethod.Post)) {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-link p-0">Log out</button>
+                    }
+                </li>
+            </ul>
         </li>
-        <li><a class="nav-link" href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
-    </ul>
     }
-}
-else
-{
-    <ul class="navbar-nav navbar-right">
-        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class="nav-link" })</li>
-        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class="nav-link" })</li>
-    </ul>
-}
+    else
+    {
+        <li class="nav-item">@Html.ActionLink("Log in", "Login", "Account", null, new { @class = "nav-link" })</li>
+        <li class="nav-item">@Html.ActionLink("Register", "Register", "Account", null, new { @class = "nav-link" })</li>
+    }
+</ul>

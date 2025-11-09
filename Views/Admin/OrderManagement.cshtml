@@ -1,0 +1,151 @@
+@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    ViewBag.Title = "Order Management";
+}
+
+<div class="container mt-4">
+    <h2>Order Management</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Orders</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Payment Status</th>
+                            <th>Courier Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td>@order.Id</td>
+                                <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                <td>@order.CustomerId</td>
+                                <td>R @order.TotalPrice.ToString("0.00")</td>
+                                <td>
+                                    <span class="badge bg-@(order.PaymentStatus == "Paid" ? "success" : "warning")">
+                                        @order.PaymentStatus
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@GetCourierStatusBadge(order.CourierStatus)">
+                                        @order.CourierStatus
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="@Url.Action("OrderDetails", "Admin", new { id = order.Id })" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
+                                                data-order-id="@order.Id" data-current-status="@order.CourierStatus">
+                                            <i class="fas fa-edit"></i> Update Status
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Courier Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @using (Html.BeginForm("UpdateCourierStatus", "Admin", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="orderId" name="orderId" />
+                    
+                    <div class="mb-3">
+                        <label for="courierStatus" class="form-label">Courier Status</label>
+                        <select class="form-select" id="courierStatus" name="courierStatus">
+                            <option value="Awaiting Payment">Awaiting Payment</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="trackingNumber" class="form-label">Tracking Number (Optional)</label>
+                        <input type="text" class="form-control" id="trackingNumber" name="trackingNumber" placeholder="Enter tracking number">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="estimatedDelivery" class="form-label">Estimated Delivery Date</label>
+                        <input type="date" class="form-control" id="estimatedDelivery" name="estimatedDelivery">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#ordersTable').DataTable({
+                order: [[0, 'desc']]
+            });
+            
+            $('#updateStatusModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var orderId = button.data('order-id');
+                var currentStatus = button.data('current-status');
+                
+                var modal = $(this);
+                modal.find('#orderId').val(orderId);
+                modal.find('#courierStatus').val(currentStatus);
+            });
+        });
+    </script>
+}
+
+@functions {
+    public string GetCourierStatusBadge(string status)
+    {
+        switch (status)
+        {
+            case "Awaiting Payment":
+                return "warning";
+            case "Processing":
+                return "info";
+            case "Shipped":
+                return "primary";
+            case "Out for Delivery":
+                return "info";
+            case "Delivered":
+                return "success";
+            case "Cancelled":
+                return "danger";
+            default:
+                return "secondary";
+        }
+    }
+}

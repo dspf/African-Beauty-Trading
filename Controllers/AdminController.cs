@@ -18,12 +18,108 @@ namespace African_Beauty_Trading.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
+
         private ApplicationDbContext db = new ApplicationDbContext();
+        private UserManager<ApplicationUser> _userManager;
         private EmailService emailService = new EmailService();
-        private OtpService otpService = new OtpService();
 
 
-        // Dashboard home
+
+        public AdminController()
+        {
+            _userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(db));
+        }
+
+        public ActionResult Users()
+        {
+            var users = db.Users.ToList();
+
+            // Create a view model to pass user data with roles
+            var userViewModels = users.Select(user => new UserViewModel
+            {
+                User = user,
+                Role = GetUserRole(user.Id)
+            }).ToList();
+
+            return View(userViewModels);
+        }
+
+        private string GetUserRole(string userId)
+        {
+            var roles = _userManager.GetRoles(userId);
+            return roles.FirstOrDefault() ?? "Customer";
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> UpdateUser(string userId, string role, bool emailConfirmed, string lockoutEnd)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    // Update email confirmation
+                    user.EmailConfirmed = emailConfirmed;
+
+                    // Update lockout
+                    switch (lockoutEnd)
+                    {
+                        case "1":
+                            user.LockoutEndDateUtc = DateTime.UtcNow.AddHours(1);
+                            break;
+                        case "24":
+                            user.LockoutEndDateUtc = DateTime.UtcNow.AddHours(24);
+                            break;
+                        case "168":
+                            user.LockoutEndDateUtc = DateTime.UtcNow.AddHours(168);
+                            break;
+                        case "permanent":
+                            user.LockoutEndDateUtc = DateTime.MaxValue;
+                            break;
+                        default:
+                            user.LockoutEndDateUtc = null;
+                            break;
+                    }
+
+                    // Update role
+                    var currentRoles = await _userManager.GetRolesAsync(user.Id);
+                    await _userManager.RemoveFromRolesAsync(user.Id, currentRoles.ToArray());
+                    await _userManager.AddToRoleAsync(user.Id, role);
+
+                    await db.SaveChangesAsync();
+                    return Json(new { success = true });
+                }
+                return Json(new { success = false, error = "User not found" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> DeleteUser(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    var result = await _userManager.DeleteAsync(user);
+                    if (result.Succeeded)
+                    {
+                        return Json(new { success = true });
+                    }
+                    return Json(new { success = false, error = string.Join(", ", result.Errors) });
+                }
+                return Json(new { success = false, error = "User not found" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+         // Dashboard home
         public ActionResult Dashboard()
         {
             ViewBag.NavActive = "Dashboard";
@@ -43,12 +139,12 @@ namespace African_Beauty_Trading.Controllers
             ViewBag.TotalOrders = totalCount;
             ViewBag.TotalRevenue = totalRevenue;
 
-            // Last 7 days: counts for Paid vs Pending
+            // Last 7 days: counts for Paid vs Pending - FIXED for nullable DateTime
             var start = DateTime.Today.AddDays(-6);
             var last7 = db.Orders
-                .Where(o => o.OrderDate >= start)
-                .ToList()   // materialize to do grouping in-memory (works across providers)
-                .GroupBy(o => o.OrderDate.Value)
+                .Where(o => o.OrderDate.HasValue && o.OrderDate >= start)
+                .ToList()
+                .GroupBy(o => o.OrderDate.Value.Date) // Use .Value.Date for nullable DateTime
                 .ToDictionary(g => g.Key, g => new {
                     Paid = g.Count(x => x.PaymentStatus == "Paid"),
                     Pending = g.Count(x => x.PaymentStatus == "Pending")
@@ -69,7 +165,7 @@ namespace African_Beauty_Trading.Controllers
                 .Take(8)
                 .ToList();
 
-            // 🔔 Latest Notifications (top 10)
+            // Latest Notifications (top 10)
             var notifications = db.AdminNotifications
                 .OrderByDescending(n => n.CreatedDate)
                 .Take(10)
@@ -79,7 +175,6 @@ namespace African_Beauty_Trading.Controllers
 
             return View(recent);
         }
-
 
         // List all orders
         public ActionResult Orders(string status)
@@ -103,87 +198,55 @@ namespace African_Beauty_Trading.Controllers
             return View(order);
         }
 
-        // GET: Assign a driver
-        public ActionResult AssignDriver(int id)
+        // GET: Assign Courier
+        public ActionResult AssignCourier(int id)
         {
             var order = db.Orders.Include("Customer").FirstOrDefault(o => o.Id == id);
             if (order == null) return HttpNotFound();
 
-             
-           
-            // Get all users who are in the "Driver" role
-            var drivers = (from u in db.Users
-                           from ur in u.Roles
-                           join r in db.Roles on ur.RoleId equals r.Id
-                           where r.Name == "Driver"
-                           select u).ToList();
+            // Courier options
+            var couriers = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "PEP", Text = "PEP Courier" },
+            new SelectListItem { Value = "Other", Text = "Other Courier" }
+        };
 
-
-
-            ViewBag.DriverId = new SelectList(drivers, "Id", "Email");
+            ViewBag.CourierName = new SelectList(couriers, "Value", "Text");
 
             return View(order);
         }
 
-        // POST: Save driver assignment
+        // POST: Save courier assignment
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AssignDriver(int orderId, string driverId)
+        public ActionResult AssignCourier(int orderId, string courierName, string trackingNumber, DateTime? estimatedDelivery)
         {
+            if (string.IsNullOrWhiteSpace(courierName))
+            {
+                TempData["Error"] = "Please select a courier.";
+                return RedirectToAction("AssignCourier", new { id = orderId });
+            }
+
             var order = db.Orders
                 .Include(o => o.Customer)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return HttpNotFound();
 
-            // Check if there's already a pending assignment for this order
-            var existingAssignment = db.DriverAssignments
-                .FirstOrDefault(a => a.OrderId == orderId && a.Status == "Pending");
-
-            if (existingAssignment != null)
-            {
-                // Update existing assignment with specific driver
-                existingAssignment.DriverId = driverId;
-                existingAssignment.Status = "Accepted";
-                existingAssignment.ResponseDate = DateTime.UtcNow;
-                existingAssignment.AssignedBy = User.Identity.GetUserId();
-            }
-            else
-            {
-                // Create new assignment directly accepted by admin
-                var assignment = new DriverAssignment
-                {
-                    OrderId = orderId,
-                    DriverId = driverId,
-                    Status = "Accepted",
-                    AssignedDate = DateTime.UtcNow,
-                    ResponseDate = DateTime.UtcNow,
-                    ExpiryTime = DateTime.UtcNow.AddHours(24), // Give 24 hours for delivery
-                    CreatedDate = DateTime.UtcNow,
-                    AssignedBy = User.Identity.GetUserId()
-                };
-                db.DriverAssignments.Add(assignment);
-            }
-
-            // Generate OTP
-            string otp = otpService.GenerateOtp();
-
-            // Update order with driver assignment
-            order.DriverId = driverId;
-            order.DeliveryStatus = "Accepted"; // Use consistent status with driver flow
-            order.DeliveryOtp = otp;
-            order.OtpGeneratedAt = DateTime.UtcNow;
-            order.DriverAssignedDate = DateTime.UtcNow;
-            order.DriverAccepted = true;
-            order.Priority = "Urgent"; // Agent-assigned orders are marked as urgent (red flag)
+            // Update order with courier assignment
+            order.CourierName = courierName;
+            order.CourierStatus = "Assigned";
+            order.CourierTrackingNumber = trackingNumber;
+            order.EstimatedDeliveryDate = estimatedDelivery ?? DateTime.Now.AddDays(3);
+            order.ShippedDate = DateTime.Now;
+            order.Priority = "Normal";
 
             db.SaveChanges();
 
-            TempData["Message"] = $"Driver assigned successfully! OTP for customer: {otp}";
+            TempData["Message"] = $"Courier assigned successfully! Tracking Number: {trackingNumber}";
 
             return RedirectToAction("OrderDetails", new { id = orderId });
         }
-
 
         public async Task<bool> TestStudentEmail()
         {
@@ -205,7 +268,7 @@ namespace African_Beauty_Trading.Controllers
                         smtpClient.EnableSsl = true;
                         smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
                         smtpClient.UseDefaultCredentials = false;
-                        smtpClient.Timeout = 20000; // 20 seconds
+                        smtpClient.Timeout = 20000;
 
                         await smtpClient.SendMailAsync(message);
                         return true;
@@ -251,16 +314,16 @@ namespace African_Beauty_Trading.Controllers
         public ActionResult CreateOrder()
         {
             ViewBag.NavActive = "Orders";
-            
+
             // Get all customers
             var customerRoleId = db.Roles.Where(r => r.Name == "Customer").Select(r => r.Id).FirstOrDefault();
             var customers = db.Users.Where(u => u.Roles.Any(r => r.RoleId == customerRoleId)).ToList();
             ViewBag.CustomerId = new SelectList(customers, "Id", "Email");
-            
+
             // Get all products
             var products = db.Products.Where(p => p.Stock > 0).ToList();
             ViewBag.Products = products;
-            
+
             return View();
         }
 
@@ -288,9 +351,10 @@ namespace African_Beauty_Trading.Controllers
                 var order = new Order
                 {
                     CustomerId = customerId,
-                    OrderDate = DateTime.Now,
-                    PaymentStatus = "Paid", // Admin created orders are marked as paid
-                    DeliveryStatus = "Processing",
+                    OrderDate = DateTime.Now, // This sets the nullable DateTime
+                    PaymentStatus = "Paid",
+                    CourierName = "PEP",
+                    CourierStatus = "Processing",
                     TotalPrice = 0,
                     OrderItems = new List<OrderItem>()
                 };
@@ -310,25 +374,8 @@ namespace African_Beauty_Trading.Controllers
                     {
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        IsRental = item.IsRental
+                        Price = product.Price * item.Quantity
                     };
-
-                    if (item.IsRental)
-                    {
-                        // Rental item
-                        orderItem.RentalStartDate = item.RentalStartDate;
-                        orderItem.RentalEndDate = item.RentalEndDate;
-                        orderItem.RentalFeePerDay = product.RentalFee;
-                        orderItem.Deposit = 0; // Set default deposit or add deposit field to Product model
-                        
-                        var days = (item.RentalEndDate - item.RentalStartDate).Days + 1;
-                        orderItem.Price = product.RentalFee * days;
-                    }
-                    else
-                    {
-                        // Purchase item
-                        orderItem.Price = product.Price * item.Quantity;
-                    }
 
                     totalPrice += orderItem.Price;
                     order.OrderItems.Add(orderItem);
@@ -338,8 +385,14 @@ namespace African_Beauty_Trading.Controllers
                 }
 
                 order.TotalPrice = totalPrice;
-                order.Priority = !string.IsNullOrEmpty(Priority) ? Priority : "Normal"; // Use selected priority or default to Normal
+                order.Priority = !string.IsNullOrEmpty(Priority) ? Priority : "Normal";
+
+                // Save order first to generate ID
                 db.Orders.Add(order);
+                db.SaveChanges();
+
+                // Now generate tracking number with actual ID
+                order.CourierTrackingNumber = "PEP" + order.Id.ToString().PadLeft(8, '0');
                 db.SaveChanges();
 
                 TempData["Message"] = "Order created successfully!";
@@ -367,11 +420,166 @@ namespace African_Beauty_Trading.Controllers
                 success = true,
                 name = product.Name,
                 price = product.Price,
-                rentalPricePerDay = product.RentalFee,
-                rentalDeposit = 0, // Default deposit value
-                stock = product.Stock,
-                canRent = product.RentalFee > 0
+                stock = product.Stock
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        // POST: Update Courier Status
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateCourierStatus(int orderId, string courierStatus, string trackingNumber, DateTime? estimatedDelivery)
+        {
+            var order = db.Orders.Find(orderId);
+
+            if (order == null)
+            {
+                return HttpNotFound();
+            }
+
+            order.CourierStatus = courierStatus;
+
+            if (!string.IsNullOrEmpty(trackingNumber))
+            {
+                order.CourierTrackingNumber = trackingNumber;
+            }
+
+            if (estimatedDelivery.HasValue)
+            {
+                order.EstimatedDeliveryDate = estimatedDelivery;
+            }
+
+            // Update shipping date if status changed to Shipped
+            if (courierStatus == "Shipped" && !order.ShippedDate.HasValue)
+            {
+                order.ShippedDate = DateTime.Now;
+            }
+
+            // Update delivery date if status changed to Delivered
+            if (courierStatus == "Delivered")
+            {
+                order.DeliveredDate = DateTime.Now; // Use DeliveredDate instead of DeliveryDate
+            }
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Order status updated successfully.";
+            return RedirectToAction("OrderDetails", new { id = orderId });
+        }
+
+        // View for managing courier assignments
+        public ActionResult ManageCouriers()
+        {
+            var orders = db.Orders
+                .Include("Customer")
+                .Where(o => o.PaymentStatus == "Paid" && o.CourierStatus != "Delivered")
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            return View(orders);
+        }
+
+        // Quick assign PEP courier
+        [HttpPost]
+        public ActionResult QuickAssignPep(int orderId)
+        {
+            var order = db.Orders.Find(orderId);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found" });
+            }
+
+            try
+            {
+                order.CourierName = "PEP";
+                order.CourierStatus = "Assigned";
+                order.CourierTrackingNumber = "PEP" + order.Id.ToString().PadLeft(8, '0');
+                order.EstimatedDeliveryDate = DateTime.Now.AddDays(3);
+                order.ShippedDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "PEP Courier assigned successfully", trackingNumber = order.CourierTrackingNumber });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error assigning courier: " + ex.Message });
+            }
+        }
+
+        // Bulk update courier status
+        [HttpPost]
+        public ActionResult BulkUpdateCourierStatus(int[] orderIds, string courierStatus)
+        {
+            if (orderIds == null || !orderIds.Any())
+            {
+                return Json(new { success = false, message = "No orders selected." });
+            }
+
+            try
+            {
+                var orders = db.Orders.Where(o => orderIds.Contains(o.Id)).ToList();
+                foreach (var order in orders)
+                {
+                    order.CourierStatus = courierStatus;
+
+                    if (courierStatus == "Shipped" && !order.ShippedDate.HasValue)
+                    {
+                        order.ShippedDate = DateTime.Now;
+                    }
+
+                    if (courierStatus == "Delivered")
+                    {
+                        order.DeliveredDate = DateTime.Now; // Use DeliveredDate
+                    }
+                }
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = $"Updated {orders.Count} orders to {courierStatus} status." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating orders: " + ex.Message });
+            }
+        }
+
+        // Order statistics for reporting
+        public ActionResult OrderStatistics()
+        {
+            ViewBag.NavActive = "Statistics";
+
+            // Monthly revenue - handle nullable OrderDate
+            var monthlyRevenue = db.Orders
+                .Where(o => o.PaymentStatus == "Paid" && o.OrderDate.HasValue)
+                .AsEnumerable() // Switch to client-side for complex operations
+                .GroupBy(o => new { Year = o.OrderDate.Value.Year, Month = o.OrderDate.Value.Month })
+                .Select(g => new
+                {
+                    Period = new DateTime(g.Key.Year, g.Key.Month, 1),
+                    Revenue = g.Sum(o => o.TotalPrice),
+                    Orders = g.Count()
+                })
+                .OrderBy(x => x.Period)
+                .ToList();
+
+            ViewBag.MonthlyRevenue = monthlyRevenue;
+
+            // Top products
+            var topProducts = db.OrderItems
+                .GroupBy(oi => oi.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    TotalSold = g.Sum(oi => oi.Quantity),
+                    ProductName = db.Products.First(p => p.Id == g.Key).Name
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .Take(10)
+                .ToList();
+
+            ViewBag.TopProducts = topProducts;
+
+            return View();
         }
 
         protected override void Dispose(bool disposing)
@@ -382,5 +590,16 @@ namespace African_Beauty_Trading.Controllers
             }
             base.Dispose(disposing);
         }
+    }
+
+    public class OrderItemViewModel
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+    }
+    public class UserViewModel
+    {
+        public ApplicationUser User { get; set; }
+        public string Role { get; set; }
     }
 }

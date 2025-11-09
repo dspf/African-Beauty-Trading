@@ -9,30 +9,26 @@ namespace African_Beauty_Trading.Models
     public class Product
     {
         public int Id { get; set; }
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; }
-        public string Size { get; set; }       // S, M, L, XL or Kids Age
-        public decimal Price { get; set; }     // Buy Price
-        public decimal RentalFee { get; set; } // Rental cost
-        public string ProductType { get; set; } // "Buy", "Rent", or "Both"
-        public int Stock { get; set; }
-        public string ImagePath { get; set; }  // File path for product photo
-        public string AgeGroup { get; set; } // For kids
-        [StringLength(500)]
         public string Description { get; set; }
-        public string EthnicGroup { get; set; } // e.g., Zulu, Xhosa, Sotho, etc.
-        public string Occasion { get; set; } // e.g., Wedding, Initiation, Festival// e.g. Men, Women, Kids
         [Required]
-        [Display(Name = "Category")]
+        [Range(0.01, 10000)]
+        public decimal Price { get; set; }
+        [Required]
+        [Range(0, 1000)]
+        public int Stock { get; set; }
+        public string ImageUrl { get; set; }
         public int CategoryId { get; set; }
-        public virtual Category Category { get; set; }
+        public bool Featured { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string AvailableSizes { get; set; }
 
-        [Required]
-        [Display(Name = "Department")]
-        public int DepartmentId { get; set; }
-        public virtual Department Department { get; set; }
-        public DateTime DateCreated { get; set; }
-        public DateTime LastUpdated { get; set; }
-        public bool IsActive { get; set; }
+        // Navigation properties
+        public virtual Category Category { get; set; }
+        public virtual ICollection<OrderItem> OrderItems { get; set; }
     }
 
 }

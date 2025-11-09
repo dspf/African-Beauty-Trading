@@ -1,0 +1,89 @@
+@model IEnumerable<African_Beauty_Trading.Models.Order>
+@{
+    ViewBag.Title = "My Orders";
+}
+
+<div class="container mt-4">
+    <h2>My Orders</h2>
+    
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> You don't have any orders yet.
+            <a href="@Url.Action("Index", "Home")" class="alert-link">Start shopping</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var order in Model)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Order #@order.Id</h5>
+                                <small class="text-muted">@order.OrderDate.Value.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            <span class="badge bg-@(order.PaymentStatus == "Paid" ? "success" : "warning")">
+                                @order.PaymentStatus
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Shipping Status</h6>
+                                <div class="progress mb-2">
+                                    @{
+                                        int progressPercentage = 0;
+                                        
+                                        if (order.CourierStatus == "Processing")
+                                        {
+                                            progressPercentage = 20;
+                                        }
+                                        else if (order.CourierStatus == "Ready for Pickup")
+                                        {
+                                            progressPercentage = 40;
+                                        }
+                                        else if (order.CourierStatus == "Shipped")
+                                        {
+                                            progressPercentage = 60;
+                                        }
+                                        else if (order.CourierStatus == "Out for Delivery")
+                                        {
+                                            progressPercentage = 80;
+                                        }
+                                        else if (order.CourierStatus == "Delivered")
+                                        {
+                                            progressPercentage = 100;
+                                        }
+                                    }
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @progressPercentage%;" 
+                                         aria-valuenow="@progressPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mb-0">
+                                    <strong>Status:</strong> @(string.IsNullOrEmpty(order.CourierStatus) ? "Processing" : order.CourierStatus)<br />
+                                    <strong>Courier:</strong> @(string.IsNullOrEmpty(order.CourierName) ? "PEP" : order.CourierName)<br />
+                                    @if (!string.IsNullOrEmpty(order.CourierTrackingNumber))
+                                    {
+                                        <strong>Tracking:</strong> @order.CourierTrackingNumber<br />
+                                    }
+                                    @if (order.EstimatedDeliveryDate.HasValue)
+                                    {
+                                        <strong>Est. Delivery:</strong> @order.EstimatedDeliveryDate.Value.ToString("MMM dd, yyyy")<br />
+                                    }
+                                </p>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Total: R @order.TotalPrice.ToString("0.00")</span>
+                                <a href="@Url.Action("OrderDetails", "Customer", new { id = order.Id })" class="btn btn-primary btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
